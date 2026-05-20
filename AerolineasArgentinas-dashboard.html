@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aerolíneas Argentinas · Análisis Financiero 2023–2024</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky:#0057A8; --sky-l:#0079D6;
+    --sun:#F5A623; --sun-l:#FFD166;
+    --bg:#05101F; --bg2:#0B1929; --bg3:#0F2238;
+    --surf:#112239; --brd:rgba(0,120,210,0.16);
+    --txt:#E8F1FA; --mut:#7A9BBD;
+    --pos:#2DD4A0; --neg:#FF5C5C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--txt);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;}
+
+  header{background:linear-gradient(135deg,#031525 0%,#0B2040 55%,#0057A8 100%);border-bottom:1px solid var(--brd);padding:26px 40px 20px;position:relative;overflow:hidden;}
+  header::after{content:'AR';font-family:'Bebas Neue',sans-serif;font-size:160px;color:rgba(255,255,255,.025);position:absolute;right:40px;top:-16px;line-height:1;letter-spacing:10px;pointer-events:none;}
+  .h-top{display:flex;align-items:center;gap:18px;margin-bottom:10px;}
+  .logo{width:50px;height:50px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#0057A8,#0099FF);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:20px;color:#fff;border:2px solid rgba(255,255,255,.2);box-shadow:0 4px 20px rgba(0,87,168,.5);}
+  h1{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:3px;color:#fff;line-height:1;}
+  .h-sub{font-size:11px;color:var(--sun);font-weight:500;letter-spacing:2px;text-transform:uppercase;margin-top:5px;}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;}
+  .bdg{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11);border-radius:20px;padding:3px 12px;font-size:11px;color:var(--mut);font-weight:500;}
+  .bdg.hl{background:rgba(245,166,35,.13);border-color:rgba(245,166,35,.28);color:var(--sun);}
+
+  .tabs{background:var(--bg2);border-bottom:1px solid var(--brd);padding:0 40px;display:flex;overflow-x:auto;}
+  .tab{padding:13px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;}
+  .tab:hover{color:var(--txt);}
+  .tab.active{color:var(--sky-l);border-bottom-color:var(--sky-l);}
+
+  main{padding:28px 40px;}
+  .sec{display:none;}
+  .sec.active{display:block;animation:fi .3s ease;}
+  @keyframes fi{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+
+  .nota{border-radius:8px;padding:13px 16px;margin-bottom:22px;border-left:4px solid;}
+  .nota.az{background:rgba(0,87,168,.09);border-color:var(--sky-l);}
+  .nota.am{background:rgba(245,166,35,.07);border-color:var(--sun);}
+  .nota h4{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+  .nota.az h4{color:var(--sky-l);} .nota.am h4{color:var(--sun);}
+  .nota p{font-size:12.5px;color:var(--mut);line-height:1.65;}
+  .nota strong{color:var(--txt);}
+
+  .st{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;margin:26px 0 14px;display:flex;align-items:center;gap:10px;}
+  .st::after{content:'';flex:1;height:1px;background:var(--brd);}
+
+  .kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--surf);border:1px solid var(--brd);border-radius:10px;padding:16px;position:relative;overflow:hidden;}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .kpi.b::before{background:linear-gradient(90deg,var(--sky),var(--sky-l));}
+  .kpi.g::before{background:linear-gradient(90deg,#2DD4A0,#1FAD80);}
+  .kpi.r::before{background:linear-gradient(90deg,#FF5C5C,#E03030);}
+  .kpi.o::before{background:linear-gradient(90deg,var(--sun),var(--sun-l));}
+  .kl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin-bottom:7px;}
+  .kv{font-family:'DM Mono',monospace;font-size:19px;font-weight:500;color:var(--txt);line-height:1;margin-bottom:3px;}
+  .ks{font-size:11px;color:var(--mut);}
+  .dlt{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:5px;}
+  .dlt.p{background:rgba(45,212,160,.1);color:var(--pos);} .dlt.n{background:rgba(255,92,92,.1);color:var(--neg);} .dlt.u{background:rgba(245,166,35,.1);color:var(--sun);}
+
+  .tw{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;overflow:hidden;margin-bottom:22px;}
+  .th-bar{background:var(--bg3);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--brd);}
+  .th-bar span:first-child{font-size:13px;font-weight:600;color:var(--txt);}
+  .th-bar span:last-child{font-size:11px;color:var(--mut);font-family:'DM Mono',monospace;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:rgba(0,87,168,.18);padding:8px 12px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sky-l);white-space:nowrap;}
+  th:first-child{text-align:left;}
+  td{padding:7px 12px;text-align:right;font-family:'DM Mono',monospace;font-size:11.5px;color:var(--txt);border-bottom:1px solid rgba(0,87,168,.05);white-space:nowrap;}
+  td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-size:12.5px;}
+  tr:last-child td{border-bottom:none;}
+  tr.grp td{background:rgba(0,87,168,.11);color:var(--sky-l);font-family:'DM Sans',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;padding:5px 12px;border-top:1px solid rgba(0,87,168,.18);}
+  tr.sub td{border-top:1px solid rgba(0,87,168,.18);font-weight:700;color:var(--sun);}
+  tr.tot td{background:rgba(0,87,168,.14);border-top:2px solid var(--sky);font-weight:700;color:#fff;font-size:12.5px;}
+  tr:hover:not(.grp):not(.tot) td{background:rgba(255,255,255,.012);}
+
+  /* colores AV */
+  .vp{color:var(--pos)!important;} .vn{color:var(--neg)!important;} .vm{color:var(--mut)!important;} .vs{color:var(--sun)!important;}
+
+  /* colores AH — siempre neutros para var. absolutas y % */
+  .ah-pos{color:var(--pos)!important;}   /* variación positiva = verde */
+  .ah-neg{color:var(--neg)!important;}   /* variación negativa = rojo */
+
+  /* DRILL DOWN */
+  .drill-toggle{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:6px;padding:2px 0;}
+  .drill-toggle .arrow{display:inline-block;width:14px;height:14px;background:rgba(0,121,214,.2);border-radius:3px;text-align:center;line-height:14px;font-size:9px;color:var(--sky-l);transition:transform .2s;flex-shrink:0;}
+  .drill-toggle.open .arrow{transform:rotate(90deg);}
+  tr.dr td{background:rgba(0,50,120,.07);}
+  tr.dr td:first-child{padding-left:28px;font-size:11.5px;color:var(--mut);}
+  tr.dr.hidden{display:none;}
+  tr.dr-sub td{background:rgba(0,50,120,.05);font-weight:600;color:var(--sky-l);}
+  tr.dr-sub td:first-child{padding-left:14px;font-size:11.5px;}
+  tr.dr-sub.hidden{display:none;}
+
+  /* BARS */
+  .bw{margin-bottom:14px;}
+  .bm{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .bl{font-size:12px;color:var(--txt);}
+  .bp{font-size:10.5px;color:var(--mut);font-family:'DM Mono',monospace;}
+  .bt{height:7px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;position:relative;margin-bottom:4px;}
+  .bf{height:100%;border-radius:4px;position:absolute;top:0;left:0;}
+  .bf.f23{background:linear-gradient(90deg,rgba(245,166,35,.45),rgba(245,166,35,.75));}
+  .bf.f24{background:linear-gradient(90deg,var(--sky),var(--sky-l));}
+
+  .leg{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;}
+  .li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut);}
+  .ld{width:10px;height:10px;border-radius:2px;}
+
+  .pill{font-family:'DM Mono',monospace;font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block;}
+  .pill.p{background:rgba(45,212,160,.1);color:var(--pos);} .pill.n{background:rgba(255,92,92,.1);color:var(--neg);} .pill.u{background:rgba(245,166,35,.1);color:var(--sun);}
+
+  .hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:22px;}
+  .hc{background:var(--surf);border:1px solid var(--brd);border-radius:10px;padding:16px;}
+  .hct{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin-bottom:12px;}
+  .hr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.035);}
+  .hr:last-child{border-bottom:none;}
+  .hrl{font-size:12px;color:var(--txt);}
+  .hrv{display:flex;align-items:center;gap:8px;}
+  .mono{font-family:'DM Mono',monospace;font-size:10.5px;color:var(--mut);}
+
+  footer{background:var(--bg2);border-top:1px solid var(--brd);padding:16px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:16px;}
+  .fl{font-size:11px;color:var(--mut);line-height:1.7;}
+  .fr{font-family:'DM Mono',monospace;font-size:11px;color:var(--mut);text-align:right;}
+
+  @media(max-width:700px){
+    header,main,footer{padding-left:16px;padding-right:16px;}
+    .tabs{padding:0 16px;}
+    h1{font-size:22px;}
+    th,td{padding:5px 7px;font-size:10.5px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-top">
+    <div class="logo">AR</div>
+    <div>
+      <h1>Aerolíneas Argentinas</h1>
+      <div class="h-sub">Análisis Financiero 2023 – 2024</div>
+    </div>
+  </div>
+  <div class="badges">
+    <span class="bdg">Estados Financieros 2023 – 2024</span>
+    <span class="bdg hl">⚡ AH: 2023 re-expresado a pesos dic-2024 (×2,18)</span>
+    <span class="bdg">Moneda constante · $ ARS</span>
+    <span class="bdg">Auditado por KPMG</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('av-esp')">📊 AV — Situación Patrimonial</div>
+  <div class="tab"        onclick="showTab('av-eerr')">📊 AV — Resultados</div>
+  <div class="tab"        onclick="showTab('ah-esp')">📈 AH — Situación Patrimonial</div>
+  <div class="tab"        onclick="showTab('ah-eerr')">📈 AH — Resultados</div>
+  <div class="tab"        onclick="showTab('metodo')">📖 Metodología</div>
+</div>
+
+<main>
+
+<!-- ══════════════════════════════════════════
+     AV — SITUACIÓN PATRIMONIAL
+══════════════════════════════════════════ -->
+<div id="tab-av-esp" class="sec active">
+  <div class="nota az">
+    <h4>📊 Análisis Vertical — Estado de Situación Patrimonial</h4>
+    <p>Cada rubro expresado como <strong>% del Total del Activo</strong> del propio período. <strong>Sin ajuste inflacionario</strong>: los porcentajes son internos a cada año y comparan estructuras, no valores absolutos.</p>
+  </div>
+
+  <div class="kg">
+    <div class="kpi b"><div class="kl">Total Activo 2024</div><div class="kv">$1.916.065 M</div><div class="ks">pesos constantes dic-2024</div></div>
+    <div class="kpi o"><div class="kl">Total Activo 2023</div><div class="kv">$1.358.167 M</div><div class="ks">pesos constantes dic-2023</div></div>
+    <div class="kpi r"><div class="kl">Patrimonio Neto / Activo 2024</div><div class="kv">−11,2%</div><div class="ks">PN negativo ambos ejercicios</div><div class="dlt u">vs −12,5% en 2023</div></div>
+    <div class="kpi g"><div class="kl">Activo No Corriente 2024</div><div class="kv">57,4%</div><div class="ks">del total del activo</div><div class="dlt u">vs 58,2% en 2023</div></div>
+  </div>
+
+  <div class="st">Activo</div>
+  <div class="tw">
+    <div class="th-bar"><span>Composición del Activo</span><span>Base 100% = Total Activo de cada año · Sin ajuste inflacionario · Millones $</span></div>
+    <table>
+      <thead><tr><th style="width:40%">Rubro</th><th>2023 ($M)</th><th>% s/ Activo 2023</th><th>2024 ($M)</th><th>% s/ Activo 2024</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="5">ACTIVO CORRIENTE</td></tr>
+        <tr><td>Caja y bancos</td><td>35.127</td><td class="vm">2,6%</td><td>187.380</td><td class="vm">9,8%</td></tr>
+        <tr><td>Inversiones</td><td>176.800</td><td class="vm">13,0%</td><td>129.213</td><td class="vm">6,7%</td></tr>
+        <tr><td>Créditos por servicios</td><td>108.101</td><td class="vm">8,0%</td><td>160.610</td><td class="vm">8,4%</td></tr>
+        <tr><td>Otros créditos</td><td>185.890</td><td class="vm">13,7%</td><td>249.170</td><td class="vm">13,0%</td></tr>
+        <tr><td>Otros activos</td><td>62.271</td><td class="vm">4,6%</td><td>89.845</td><td class="vm">4,7%</td></tr>
+        <tr class="sub"><td>TOTAL ACTIVO CORRIENTE</td><td>568.188</td><td class="vs">41,8%</td><td>816.217</td><td class="vs">42,6%</td></tr>
+        <tr class="grp"><td colspan="5">ACTIVO NO CORRIENTE</td></tr>
+        <tr><td>Otros créditos NC</td><td>330.351</td><td class="vm">24,3%</td><td>432.870</td><td class="vm">22,6%</td></tr>
+        <tr><td>Inversiones NC</td><td>7</td><td class="vm">0,0%</td><td>2.892</td><td class="vm">0,2%</td></tr>
+        <tr><td>Bienes de uso</td><td>441.130</td><td class="vm">32,5%</td><td>637.174</td><td class="vm">33,2%</td></tr>
+        <tr><td>Propiedades de inversión</td><td>16.531</td><td class="vm">1,2%</td><td>21.837</td><td class="vm">1,1%</td></tr>
+        <tr><td>Activos intangibles</td><td>1.960</td><td class="vm">0,1%</td><td>5.075</td><td class="vm">0,3%</td></tr>
+        <tr class="sub"><td>TOTAL ACTIVO NO CORRIENTE</td><td>789.979</td><td class="vs">58,2%</td><td>1.099.848</td><td class="vs">57,4%</td></tr>
+        <tr class="tot"><td>TOTAL ACTIVO</td><td>1.358.167</td><td>100,0%</td><td>1.916.065</td><td>100,0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="st">Pasivo y Patrimonio Neto</div>
+  <div class="tw">
+    <div class="th-bar"><span>Composición del Pasivo y PN</span><span>Base 100% = Total Activo de cada año</span></div>
+    <table>
+      <thead><tr><th style="width:40%">Rubro</th><th>2023 ($M)</th><th>% s/ Activo 2023</th><th>2024 ($M)</th><th>% s/ Activo 2024</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="5">PASIVO CORRIENTE</td></tr>
+        <tr><td>Deudas comerciales</td><td>264.827</td><td class="vm">19,5%</td><td>309.605</td><td class="vm">16,2%</td></tr>
+        <tr><td>Deudas financieras</td><td>105.789</td><td class="vm">7,8%</td><td>90.732</td><td class="vm">4,7%</td></tr>
+        <tr><td>Remuneraciones y cargas sociales</td><td>39.924</td><td class="vm">2,9%</td><td>70.142</td><td class="vm">3,7%</td></tr>
+        <tr><td>Cargas fiscales</td><td>12.686</td><td class="vm">0,9%</td><td>11.019</td><td class="vm">0,6%</td></tr>
+        <tr><td>Ingresos diferidos por tráfico aéreo</td><td>301.571</td><td class="vm">22,2%</td><td>559.584</td><td class="vm">29,2%</td></tr>
+        <tr><td>Otros pasivos corrientes</td><td>93.046</td><td class="vm">6,9%</td><td>132.576</td><td class="vm">6,9%</td></tr>
+        <tr class="sub"><td>TOTAL PASIVO CORRIENTE</td><td>817.843</td><td class="vn">60,2%</td><td>1.173.657</td><td class="vn">61,2%</td></tr>
+        <tr class="grp"><td colspan="5">PASIVO NO CORRIENTE</td></tr>
+        <tr><td>Deudas comerciales NC</td><td>449</td><td class="vm">0,0%</td><td>217.756</td><td class="vm">11,4%</td></tr>
+        <tr><td>Deudas financieras NC</td><td>182.684</td><td class="vm">13,5%</td><td>173.401</td><td class="vm">9,1%</td></tr>
+        <tr><td>Remuneraciones y cargas sociales NC</td><td>1.119</td><td class="vm">0,1%</td><td>11.751</td><td class="vm">0,6%</td></tr>
+        <tr><td>Ingresos diferidos por tráfico aéreo NC</td><td>135.824</td><td class="vm">10,0%</td><td>498.155</td><td class="vm">26,0%</td></tr>
+        <tr><td>Otros pasivos NC</td><td>363.838</td><td class="vm">26,8%</td><td>56.600</td><td class="vm">3,0%</td></tr>
+        <tr><td>Previsiones</td><td>26.551</td><td class="vm">2,0%</td><td>—</td><td class="vm">0,0%</td></tr>
+        <tr class="sub"><td>TOTAL PASIVO NO CORRIENTE</td><td>710.466</td><td class="vn">52,3%</td><td>957.663</td><td class="vn">50,0%</td></tr>
+        <tr class="tot"><td>TOTAL PASIVO</td><td>1.528.309</td><td class="vn">112,5%</td><td>2.131.320</td><td class="vn">111,2%</td></tr>
+        <tr class="sub"><td>PATRIMONIO NETO</td><td>(170.142)</td><td class="vn">−12,5%</td><td>(215.255)</td><td class="vn">−11,2%</td></tr>
+        <tr class="tot"><td>TOTAL PASIVO + PN</td><td>1.358.167</td><td>100,0%</td><td>1.916.065</td><td>100,0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="st">Estructura visual</div>
+  <div class="leg"><div class="li"><div class="ld" style="background:rgba(245,166,35,.7)"></div>2023</div><div class="li"><div class="ld" style="background:var(--sky-l)"></div>2024</div></div>
+  <div id="bars-esp"></div>
+  <script>(function(){
+    const d=[
+      {l:"Activo Corriente",v23:41.8,v24:42.6},
+      {l:"Bienes de uso",v23:32.5,v24:33.2},
+      {l:"Otros créditos NC",v23:24.3,v24:22.6},
+      {l:"Ingresos diferidos tráfico C",v23:22.2,v24:29.2},
+      {l:"Deudas comerciales C",v23:19.5,v24:16.2},
+      {l:"Ingresos diferidos tráfico NC",v23:10.0,v24:26.0},
+      {l:"Deudas financieras NC",v23:13.5,v24:9.1},
+    ];
+    const c=document.getElementById('bars-esp');
+    d.forEach(b=>{c.innerHTML+=`<div class="bw"><div class="bm"><span class="bl">${b.l}</span><span class="bp">2023: ${b.v23}% | 2024: ${b.v24}%</span></div><div class="bt"><div class="bf f23" style="width:${b.v23*100/40}%"></div></div><div class="bt"><div class="bf f24" style="width:${b.v24*100/40}%"></div></div></div>`;});
+  })();</script>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     AV — ESTADO DE RESULTADOS
+══════════════════════════════════════════ -->
+<div id="tab-av-eerr" class="sec">
+  <div class="nota az">
+    <h4>📊 Análisis Vertical — Estado de Resultados</h4>
+    <p>Cada rubro expresado como <strong>% de los Ingresos por Servicios Prestados</strong> del propio período. <strong>Sin ajuste inflacionario.</strong> Los rubros con ▶ permiten expandir la apertura por naturaleza (Anexo I).</p>
+  </div>
+
+  <div class="kg">
+    <div class="kpi b"><div class="kl">Ingresos 2024</div><div class="kv">$2.510.447 M</div><div class="ks">= 100% base AV</div></div>
+    <div class="kpi o"><div class="kl">Ingresos 2023</div><div class="kv">$1.129.084 M</div><div class="ks">= 100% base AV</div></div>
+    <div class="kpi g"><div class="kl">Resultado bruto 2024</div><div class="kv">+11,9%</div><div class="ks">vs −7,5% en 2023</div><div class="dlt p">Reversión del resultado bruto</div></div>
+    <div class="kpi g"><div class="kl">Resultado neto 2024</div><div class="kv">+10,8%</div><div class="ks">vs −15,6% en 2023</div><div class="dlt p">Ejercicio positivo</div></div>
+  </div>
+
+  <div class="st">Estado de Resultados — Análisis Vertical</div>
+  <div class="tw">
+    <div class="th-bar"><span>Con apertura por naturaleza — clic en ▶ para expandir</span><span>Base 100% = Ingresos por servicios de cada año · Millones $</span></div>
+    <table>
+      <thead><tr><th style="width:42%">Concepto</th><th>2023 ($M)</th><th>% s/ Ventas 2023</th><th>2024 ($M)</th><th>% s/ Ventas 2024</th></tr></thead>
+      <tbody>
+        <tr class="tot"><td>INGRESOS POR SERVICIOS PRESTADOS</td><td>1.129.084</td><td>100,0%</td><td>2.510.447</td><td>100,0%</td></tr>
+
+        <!-- Apertura ingresos AV -->
+        <tr class="dr-sub" id="av-ing-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('av-ing')" id="av-ing-toggle"><span class="arrow">▶</span> Apertura de ingresos</span></td>
+          <td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Pasajes</td><td>1.030.885</td><td class="vm">91,3%</td><td>2.226.677</td><td class="vm">88,7%</td></tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Cargas y correos</td><td>40.483</td><td class="vm">3,6%</td><td>94.839</td><td class="vm">3,8%</td></tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Programa pasajeros frecuentes</td><td>20.884</td><td class="vm">1,8%</td><td>69.140</td><td class="vm">2,8%</td></tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Misceláneos pasajes</td><td>31.829</td><td class="vm">2,8%</td><td>108.052</td><td class="vm">4,3%</td></tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Otros servicios</td><td>2.871</td><td class="vm">0,3%</td><td>6.637</td><td class="vm">0,3%</td></tr>
+        <tr class="dr hidden" data-grp="av-ing"><td>Servicios y trabajos a terceros</td><td>2.132</td><td class="vm">0,2%</td><td>5.103</td><td class="vm">0,2%</td></tr>
+
+        <!-- Costo de servicios AV -->
+        <tr class="dr-sub" id="av-costo-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('av-costo')" id="av-costo-toggle"><span class="arrow">▶</span> Costo de los servicios prestados</span></td>
+          <td>(1.214.097)</td><td class="vn">−107,5%</td><td>(2.210.863)</td><td class="vn">−88,1%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Remuneraciones y cargas sociales</td><td>(350.138)</td><td class="vm">−31,0%</td><td>(456.755)</td><td class="vm">−18,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Combustibles</td><td>(394.725)</td><td class="vm">−34,9%</td><td>(739.541)</td><td class="vm">−29,5%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Alquiler aeronaves, motores y simuladores</td><td>(118.733)</td><td class="vm">−10,5%</td><td>(270.489)</td><td class="vm">−10,8%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Mantenimiento de aeronaves</td><td>(116.869)</td><td class="vm">−10,3%</td><td>(188.942)</td><td class="vm">−7,5%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Atención al vuelo</td><td>(61.665)</td><td class="vm">−5,5%</td><td>(140.696)</td><td class="vm">−5,6%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Depreciación de bienes de uso</td><td>(48.828)</td><td class="vm">−4,3%</td><td>(147.771)</td><td class="vm">−5,9%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Aprovisionamiento a bordo</td><td>(25.556)</td><td class="vm">−2,3%</td><td>(66.790)</td><td class="vm">−2,7%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Viáticos tripulaciones y otros</td><td>(24.287)</td><td class="vm">−2,1%</td><td>(47.488)</td><td class="vm">−1,9%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Seguridad y vigilancia</td><td>(16.848)</td><td class="vm">−1,5%</td><td>(35.412)</td><td class="vm">−1,4%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Consumo de materiales y suministros</td><td>(19.688)</td><td class="vm">−1,7%</td><td>(36.816)</td><td class="vm">−1,5%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Otros alquileres</td><td>(9.090)</td><td class="vm">−0,8%</td><td>(19.153)</td><td class="vm">−0,8%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Viáticos y otros servicios al personal</td><td>(7.955)</td><td class="vm">−0,7%</td><td>(14.513)</td><td class="vm">−0,6%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Seguros</td><td>(4.656)</td><td class="vm">−0,4%</td><td>(7.827)</td><td class="vm">−0,3%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Otros gastos de mantenimiento</td><td>(5.154)</td><td class="vm">−0,5%</td><td>(11.463)</td><td class="vm">−0,5%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Gastos por demoras y vuelos interrumpidos</td><td>(1.759)</td><td class="vm">−0,2%</td><td>(4.585)</td><td class="vm">−0,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Depreciación de propiedades de inversión</td><td>—</td><td class="vm">0,0%</td><td>(549)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Comunicaciones y sistemas</td><td>(2.431)</td><td class="vm">−0,2%</td><td>(9.040)</td><td class="vm">−0,4%</td></tr>
+        <tr class="dr hidden" data-grp="av-costo"><td>Diversos</td><td>(5.715)</td><td class="vm">−0,5%</td><td>(13.032)</td><td class="vm">−0,5%</td></tr>
+
+        <tr class="sub"><td>GANANCIA / (PÉRDIDA) BRUTA</td><td>(85.013)</td><td class="vn">−7,5%</td><td>299.584</td><td class="vp">+11,9%</td></tr>
+
+        <!-- Gastos comercialización AV -->
+        <tr class="dr-sub" id="av-gcom-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('av-gcom')" id="av-gcom-toggle"><span class="arrow">▶</span> Gastos de comercialización</span></td>
+          <td>(124.910)</td><td class="vn">−11,1%</td><td>(219.143)</td><td class="vn">−8,7%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Remuneraciones y cargas sociales</td><td>(25.900)</td><td class="vm">−2,3%</td><td>(30.259)</td><td class="vm">−1,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Comunicaciones y sistemas</td><td>(41.997)</td><td class="vm">−3,7%</td><td>(80.627)</td><td class="vm">−3,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Comisiones y gastos de ventas</td><td>(30.635)</td><td class="vm">−2,7%</td><td>(68.786)</td><td class="vm">−2,7%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Impuestos, tasas y contribuciones</td><td>(17.951)</td><td class="vm">−1,6%</td><td>(29.032)</td><td class="vm">−1,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Gastos de publicidad y propaganda</td><td>(3.661)</td><td class="vm">−0,3%</td><td>(2.829)</td><td class="vm">−0,1%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Seguridad y vigilancia</td><td>(1.121)</td><td class="vm">−0,1%</td><td>(2.162)</td><td class="vm">−0,1%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Otros alquileres</td><td>(528)</td><td class="vm">0,0%</td><td>(1.807)</td><td class="vm">−0,1%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Otros gastos de mantenimiento</td><td>(823)</td><td class="vm">−0,1%</td><td>(1.101)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Viáticos y servicios al personal</td><td>(194)</td><td class="vm">0,0%</td><td>(536)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Consumo de materiales</td><td>(658)</td><td class="vm">−0,1%</td><td>(363)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Depreciación de bienes de uso</td><td>(398)</td><td class="vm">0,0%</td><td>(690)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Seguros</td><td>(24)</td><td class="vm">0,0%</td><td>(65)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gcom"><td>Diversos</td><td>(1.019)</td><td class="vm">−0,1%</td><td>(886)</td><td class="vm">0,0%</td></tr>
+
+        <!-- Gastos administración AV -->
+        <tr class="dr-sub" id="av-gadm-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('av-gadm')" id="av-gadm-toggle"><span class="arrow">▶</span> Gastos de administración</span></td>
+          <td>(55.843)</td><td class="vn">−4,9%</td><td>(93.107)</td><td class="vn">−3,7%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Remuneraciones y cargas sociales</td><td>(21.689)</td><td class="vm">−1,9%</td><td>(28.991)</td><td class="vm">−1,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Impuestos, tasas y contribuciones</td><td>(22.746)</td><td class="vm">−2,0%</td><td>(42.873)</td><td class="vm">−1,7%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Comunicaciones y sistemas</td><td>(5.083)</td><td class="vm">−0,4%</td><td>(11.337)</td><td class="vm">−0,5%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Honorarios y retribuciones</td><td>(2.157)</td><td class="vm">−0,2%</td><td>(3.800)</td><td class="vm">−0,2%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Amortización de intangibles</td><td>(1.332)</td><td class="vm">−0,1%</td><td>(359)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Viáticos y servicios al personal</td><td>(878)</td><td class="vm">−0,1%</td><td>(1.586)</td><td class="vm">−0,1%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Otros alquileres</td><td>(512)</td><td class="vm">0,0%</td><td>(1.172)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Seguros</td><td>(445)</td><td class="vm">0,0%</td><td>(749)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Consumo de materiales</td><td>(352)</td><td class="vm">0,0%</td><td>(543)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Depreciación de bienes de uso</td><td>(169)</td><td class="vm">0,0%</td><td>(252)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Otros gastos de mantenimiento</td><td>(53)</td><td class="vm">0,0%</td><td>(103)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Seguridad y vigilancia</td><td>(0)</td><td class="vm">0,0%</td><td>(2)</td><td class="vm">0,0%</td></tr>
+        <tr class="dr hidden" data-grp="av-gadm"><td>Diversos</td><td>(425)</td><td class="vm">0,0%</td><td>(1.340)</td><td class="vm">−0,1%</td></tr>
+
+        <tr class="sub"><td>TOTAL GASTOS ADM. + COMERCIALIZACIÓN</td><td>(180.752)</td><td class="vn">−16,0%</td><td>(312.250)</td><td class="vn">−12,4%</td></tr>
+        <tr><td>Resultado de inversiones permanentes</td><td>(105)</td><td class="vm">0,0%</td><td>183</td><td class="vm">0,0%</td></tr>
+        <tr><td>Resultados financieros y por tenencia (incl. RECPAM)</td><td>119.097</td><td class="vp">+10,5%</td><td>351.858</td><td class="vp">+14,0%</td></tr>
+        <tr><td>Otros ingresos y egresos netos</td><td>(25.708)</td><td class="vn">−2,3%</td><td>(88.701)</td><td class="vn">−3,5%</td></tr>
+        <tr class="sub"><td>GANANCIA / (PÉRDIDA) ANTES DE IMPUESTO</td><td>(172.482)</td><td class="vn">−15,3%</td><td>250.674</td><td class="vp">+9,9%</td></tr>
+        <tr><td>Impuesto a las ganancias</td><td>(4.133)</td><td class="vn">−0,4%</td><td>20.140</td><td class="vp">+0,8%</td></tr>
+        <tr class="tot"><td>GANANCIA / (PÉRDIDA) NETA DEL EJERCICIO</td><td>(176.615)</td><td class="vn">−15,6%</td><td>270.814</td><td class="vp">+10,8%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="st">Estructura de costos sobre ventas</div>
+  <div class="leg"><div class="li"><div class="ld" style="background:rgba(245,166,35,.7)"></div>2023</div><div class="li"><div class="ld" style="background:var(--sky-l)"></div>2024</div></div>
+  <div id="bars-eerr"></div>
+  <script>(function(){
+    const d=[
+      {l:"Costo de servicios prestados",v23:107.5,v24:88.1},
+      {l:"Gastos de comercialización",v23:11.1,v24:8.7},
+      {l:"Gastos de administración",v23:4.9,v24:3.7},
+      {l:"Result. financieros (positivo)",v23:10.5,v24:14.0},
+      {l:"Otros ingresos/egresos netos",v23:2.3,v24:3.5},
+    ];
+    const c=document.getElementById('bars-eerr');
+    d.forEach(b=>{c.innerHTML+=`<div class="bw"><div class="bm"><span class="bl">${b.l}</span><span class="bp">2023: ${b.v23}% | 2024: ${b.v24}%</span></div><div class="bt"><div class="bf f23" style="width:${b.v23/120*100}%"></div></div><div class="bt"><div class="bf f24" style="width:${b.v24/120*100}%"></div></div></div>`;});
+  })();</script>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     AH — SITUACIÓN PATRIMONIAL
+══════════════════════════════════════════ -->
+<div id="tab-ah-esp" class="sec">
+  <div class="nota am">
+    <h4>⚡ Análisis Horizontal — Estado de Situación Patrimonial</h4>
+    <p>Los saldos 2023 (pesos constantes dic-2023) se re-expresan multiplicando por <strong>×2,18 (+118%)</strong> para llevarlos a pesos constantes dic-2024. La variación resultante es <strong>real</strong>. <strong>Convención de color:</strong> <span style="color:#2DD4A0">■ verde = financieramente favorable</span> (activo sube, pasivo baja, PN mejora) · <span style="color:#FF5C5C">■ rojo = financieramente desfavorable</span> (activo baja, pasivo sube, PN deteriora).</p>
+  </div>
+
+  <div class="kg">
+    <div class="kpi b"><div class="kl">Var. real Activo Total</div><div class="kv">−35,3%</div><div class="ks">En pesos re-expresados</div><div class="dlt n">Caída real de activos</div></div>
+    <div class="kpi g"><div class="kl">Var. real Pasivo Total</div><div class="kv">−36,0%</div><div class="ks">Cae más que el activo</div><div class="dlt p">Menor endeudamiento real</div></div>
+    <div class="kpi g"><div class="kl">Var. real PN</div><div class="kv">+41,9%</div><div class="ks">La pérdida acumulada decreció</div><div class="dlt p">Mejora patrimonial relativa</div></div>
+    <div class="kpi g"><div class="kl">Var. real Caja y bancos</div><div class="kv">+144,7%</div><div class="ks">Mayor liquidez real</div><div class="dlt p">Crecimiento real significativo</div></div>
+  </div>
+
+  <div class="st">Tabla de Variaciones — Situación Patrimonial</div>
+  <div class="tw">
+    <div class="th-bar"><span>Análisis Horizontal ESP</span><span>2023 re-expresado ×2,18 → pesos dic-2024 · Verde = favorable · Rojo = desfavorable · Millones $</span></div>
+    <table>
+      <thead><tr><th style="width:34%">Rubro</th><th>2023 Nominal</th><th>×2,18</th><th>2023 Re-expr.</th><th>2024</th><th>Var. Absoluta</th><th>Var. %</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="7">ACTIVO CORRIENTE</td></tr>
+        <!-- Activos: sube = verde, baja = rojo -->
+        <tr><td>Caja y bancos</td><td>35.127</td><td class="vm">×2,18</td><td>76.577</td><td>187.380</td><td class="ah-pos">+110.803</td><td class="ah-pos">+144,7%</td></tr>
+        <tr><td>Inversiones</td><td>176.800</td><td class="vm">×2,18</td><td>385.424</td><td>129.213</td><td class="ah-neg">−256.211</td><td class="ah-neg">−66,5%</td></tr>
+        <tr><td>Créditos por servicios</td><td>108.101</td><td class="vm">×2,18</td><td>235.660</td><td>160.610</td><td class="ah-neg">−75.050</td><td class="ah-neg">−31,8%</td></tr>
+        <tr><td>Otros créditos</td><td>185.890</td><td class="vm">×2,18</td><td>405.240</td><td>249.170</td><td class="ah-neg">−156.070</td><td class="ah-neg">−38,5%</td></tr>
+        <tr><td>Otros activos</td><td>62.271</td><td class="vm">×2,18</td><td>135.751</td><td>89.845</td><td class="ah-neg">−45.906</td><td class="ah-neg">−33,8%</td></tr>
+        <tr class="sub"><td>TOTAL ACTIVO CORRIENTE</td><td>568.188</td><td class="vm">×2,18</td><td>1.238.650</td><td>816.217</td><td class="ah-neg">−422.433</td><td class="ah-neg">−34,1%</td></tr>
+        <tr class="grp"><td colspan="7">ACTIVO NO CORRIENTE</td></tr>
+        <tr><td>Otros créditos NC</td><td>330.351</td><td class="vm">×2,18</td><td>720.165</td><td>432.870</td><td class="ah-neg">−287.295</td><td class="ah-neg">−39,9%</td></tr>
+        <tr><td>Bienes de uso</td><td>441.130</td><td class="vm">×2,18</td><td>961.663</td><td>637.174</td><td class="ah-neg">−324.489</td><td class="ah-neg">−33,7%</td></tr>
+        <tr><td>Propiedades de inversión</td><td>16.531</td><td class="vm">×2,18</td><td>36.038</td><td>21.837</td><td class="ah-neg">−14.201</td><td class="ah-neg">−39,4%</td></tr>
+        <tr><td>Activos intangibles</td><td>1.960</td><td class="vm">×2,18</td><td>4.273</td><td>5.075</td><td class="ah-pos">+802</td><td class="ah-pos">+18,8%</td></tr>
+        <tr class="sub"><td>TOTAL ACTIVO NC</td><td>789.979</td><td class="vm">×2,18</td><td>1.722.154</td><td>1.099.848</td><td class="ah-neg">−622.306</td><td class="ah-neg">−36,1%</td></tr>
+        <tr class="tot"><td>TOTAL ACTIVO</td><td>1.358.167</td><td class="vm">×2,18</td><td>2.960.804</td><td>1.916.065</td><td class="ah-neg">−1.044.739</td><td class="ah-neg">−35,3%</td></tr>
+        <tr class="grp"><td colspan="7">PASIVO CORRIENTE</td></tr>
+        <!-- Pasivos: sube = rojo, baja = verde -->
+        <tr><td>Deudas comerciales C</td><td>264.827</td><td class="vm">×2,18</td><td>577.323</td><td>309.605</td><td class="ah-pos">−267.718</td><td class="ah-pos">−46,4%</td></tr>
+        <tr><td>Deudas financieras C</td><td>105.789</td><td class="vm">×2,18</td><td>230.620</td><td>90.732</td><td class="ah-pos">−139.888</td><td class="ah-pos">−60,7%</td></tr>
+        <tr><td>Remuneraciones C</td><td>39.924</td><td class="vm">×2,18</td><td>87.034</td><td>70.142</td><td class="ah-pos">−16.892</td><td class="ah-pos">−19,4%</td></tr>
+        <tr><td>Cargas fiscales</td><td>12.686</td><td class="vm">×2,18</td><td>27.655</td><td>11.019</td><td class="ah-pos">−16.636</td><td class="ah-pos">−60,2%</td></tr>
+        <tr><td>Ingresos diferidos tráfico C</td><td>301.571</td><td class="vm">×2,18</td><td>657.425</td><td>559.584</td><td class="ah-pos">−97.841</td><td class="ah-pos">−14,9%</td></tr>
+        <tr><td>Otros pasivos C</td><td>93.046</td><td class="vm">×2,18</td><td>202.840</td><td>132.576</td><td class="ah-pos">−70.264</td><td class="ah-pos">−34,6%</td></tr>
+        <tr class="sub"><td>TOTAL PASIVO CORRIENTE</td><td>817.843</td><td class="vm">×2,18</td><td>1.782.898</td><td>1.173.657</td><td class="ah-pos">−609.241</td><td class="ah-pos">−34,2%</td></tr>
+        <tr class="grp"><td colspan="7">PASIVO NO CORRIENTE</td></tr>
+        <tr><td>Deudas comerciales NC</td><td>449</td><td class="vm">×2,18</td><td>979</td><td>217.756</td><td class="ah-neg">+216.777</td><td class="ah-neg">+n/a</td></tr>
+        <tr><td>Deudas financieras NC</td><td>182.684</td><td class="vm">×2,18</td><td>398.251</td><td>173.401</td><td class="ah-pos">−224.850</td><td class="ah-pos">−56,5%</td></tr>
+        <tr><td>Remuneraciones NC</td><td>1.119</td><td class="vm">×2,18</td><td>2.439</td><td>11.751</td><td class="ah-neg">+9.312</td><td class="ah-neg">+381,8%</td></tr>
+        <tr><td>Ingresos diferidos tráfico NC</td><td>135.824</td><td class="vm">×2,18</td><td>296.097</td><td>498.155</td><td class="ah-neg">+202.058</td><td class="ah-neg">+68,2%</td></tr>
+        <tr><td>Otros pasivos NC</td><td>363.838</td><td class="vm">×2,18</td><td>793.167</td><td>56.600</td><td class="ah-pos">−736.567</td><td class="ah-pos">−92,9%</td></tr>
+        <tr><td>Previsiones</td><td>26.551</td><td class="vm">×2,18</td><td>57.881</td><td>—</td><td class="ah-pos">−57.881</td><td class="ah-pos">−100,0%</td></tr>
+        <tr class="sub"><td>TOTAL PASIVO NC</td><td>710.466</td><td class="vm">×2,18</td><td>1.548.816</td><td>957.663</td><td class="ah-pos">−591.153</td><td class="ah-pos">−38,2%</td></tr>
+        <tr class="tot"><td>TOTAL PASIVO</td><td>1.528.309</td><td class="vm">×2,18</td><td>3.331.714</td><td>2.131.320</td><td class="ah-pos">−1.200.394</td><td class="ah-pos">−36,0%</td></tr>
+        <!-- PN negativo: la pérdida disminuye (número menos negativo) = verde -->
+        <tr class="sub"><td>PATRIMONIO NETO</td><td>(170.142)</td><td class="vm">×2,18</td><td>(370.910)</td><td>(215.255)</td><td class="ah-pos">+155.655</td><td class="ah-pos">+41,9%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="nota az" style="margin-top:4px">
+    <h4>ℹ️ Nota sobre la re-expresión</h4>
+    <p>Los EECC 2023 ya están en moneda constante dic-2023. El ajuste ×2,18 los lleva a pesos de dic-2024. Algunos rubros muestran variaciones muy pronunciadas por <strong>reclasificaciones entre ejercicios</strong> (ej: Otros pasivos NC y Deudas comerciales NC). El PN negativo mejora porque la pérdida acumulada re-expresada es mayor que la real 2024.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     AH — ESTADO DE RESULTADOS
+══════════════════════════════════════════ -->
+<div id="tab-ah-eerr" class="sec">
+  <div class="nota am">
+    <h4>⚡ Análisis Horizontal — Estado de Resultados</h4>
+    <p>Los valores 2023 se re-expresan ×2,18 a pesos constantes dic-2024. Los rubros con ▶ permiten expandir la apertura por naturaleza. <strong>Convención de color:</strong> <span style="color:#2DD4A0">■ verde = financieramente favorable</span> (ingresos suben, costos/gastos bajan, resultado positivo aumenta o negativo disminuye) · <span style="color:#FF5C5C">■ rojo = financieramente desfavorable</span>.</p>
+  </div>
+
+  <div class="kg">
+    <div class="kpi b"><div class="kl">Var. real Ingresos</div><div class="kv">+2,0%</div><div class="ks">$2.510.447M vs $2.461.404M re-expr.</div><div class="dlt p">Leve crecimiento real</div></div>
+    <div class="kpi g"><div class="kl">Var. real Costo de servicios</div><div class="kv">+16,5%</div><div class="ks">Cae en términos relativos</div><div class="dlt p">Menor que crecimiento de ingresos</div></div>
+    <div class="kpi g"><div class="kl">Var. real Gtos. Adm + Com.</div><div class="kv">+20,8%</div><div class="ks">Menor crecimiento que ingresos</div><div class="dlt p">Apalancamiento operativo</div></div>
+    <div class="kpi g"><div class="kl">Resultado: reversión total</div><div class="kv">+$655.835 M</div><div class="ks">De pérdida −$385.021M re-expr. a ganancia +$270.814M</div><div class="dlt p">Reversión de resultado</div></div>
+  </div>
+
+  <div class="st">Tabla de Variaciones — Estado de Resultados</div>
+  <div class="tw">
+    <div class="th-bar"><span>Con apertura por naturaleza — clic en ▶ para expandir</span><span>2023 re-expresado ×2,18 → pesos dic-2024 · Verde = favorable · Rojo = desfavorable · Millones $</span></div>
+    <table>
+      <thead><tr><th style="width:36%">Concepto</th><th>2023 Nominal</th><th>×2,18</th><th>2023 Re-expr.</th><th>2024</th><th>Var. Abs.</th><th>Var. %</th></tr></thead>
+      <tbody>
+        <tr class="tot"><td>INGRESOS POR SERVICIOS</td><td>1.129.084</td><td class="vm">×2,18</td><td>2.461.404</td><td>2.510.447</td><td class="ah-pos">+49.043</td><td class="ah-pos">+2,0%</td></tr>
+
+        <!-- Apertura ingresos AH -->
+        <tr class="dr-sub" id="ah-ing-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('ah-ing')" id="ah-ing-toggle"><span class="arrow">▶</span> Apertura de ingresos</span></td>
+          <td></td><td class="vm">×2,18</td><td></td><td></td><td></td><td></td>
+        </tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Pasajes</td><td>1.030.885</td><td class="vm">×2,18</td><td>2.247.329</td><td>2.226.677</td><td class="ah-neg">−20.652</td><td class="ah-neg">−0,9%</td></tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Cargas y correos</td><td>40.483</td><td class="vm">×2,18</td><td>88.253</td><td>94.839</td><td class="ah-pos">+6.586</td><td class="ah-pos">+7,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Programa pasajeros frecuentes</td><td>20.884</td><td class="vm">×2,18</td><td>45.526</td><td>69.140</td><td class="ah-pos">+23.614</td><td class="ah-pos">+51,9%</td></tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Misceláneos pasajes</td><td>31.829</td><td class="vm">×2,18</td><td>69.387</td><td>108.052</td><td class="ah-pos">+38.665</td><td class="ah-pos">+55,7%</td></tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Otros servicios</td><td>2.871</td><td class="vm">×2,18</td><td>6.259</td><td>6.637</td><td class="ah-pos">+378</td><td class="ah-pos">+6,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-ing"><td>Servicios y trabajos a terceros</td><td>2.132</td><td class="vm">×2,18</td><td>4.648</td><td>5.103</td><td class="ah-pos">+455</td><td class="ah-pos">+9,8%</td></tr>
+
+        <!-- Costo de servicios AH -->
+        <tr class="dr-sub" id="ah-costo-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('ah-costo')" id="ah-costo-toggle"><span class="arrow">▶</span> Costo de los servicios prestados</span></td>
+          <td>(1.214.097)</td><td class="vm">×2,18</td><td>(2.646.732)</td><td>(2.210.863)</td><td class="ah-pos">+435.869</td><td class="ah-pos">+16,5%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Remuneraciones y cargas sociales</td><td>(350.138)</td><td class="vm">×2,18</td><td>(763.301)</td><td>(456.755)</td><td class="ah-pos">+306.546</td><td class="ah-pos">+40,2%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Combustibles</td><td>(394.725)</td><td class="vm">×2,18</td><td>(860.501)</td><td>(739.541)</td><td class="ah-pos">+120.960</td><td class="ah-pos">+14,1%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Alquiler aeronaves, motores y simuladores</td><td>(118.733)</td><td class="vm">×2,18</td><td>(258.838)</td><td>(270.489)</td><td class="ah-neg">−11.651</td><td class="ah-neg">−4,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Mantenimiento de aeronaves</td><td>(116.869)</td><td class="vm">×2,18</td><td>(254.775)</td><td>(188.942)</td><td class="ah-pos">+65.833</td><td class="ah-pos">+25,8%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Atención al vuelo</td><td>(61.665)</td><td class="vm">×2,18</td><td>(134.430)</td><td>(140.696)</td><td class="ah-neg">−6.266</td><td class="ah-neg">−4,7%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Depreciación de bienes de uso</td><td>(48.828)</td><td class="vm">×2,18</td><td>(106.445)</td><td>(147.771)</td><td class="ah-neg">−41.326</td><td class="ah-neg">−38,8%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Aprovisionamiento a bordo</td><td>(25.556)</td><td class="vm">×2,18</td><td>(55.712)</td><td>(66.790)</td><td class="ah-neg">−11.078</td><td class="ah-neg">−19,9%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Viáticos tripulaciones y otros</td><td>(24.287)</td><td class="vm">×2,18</td><td>(52.945)</td><td>(47.488)</td><td class="ah-pos">+5.457</td><td class="ah-pos">+10,3%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Seguridad y vigilancia</td><td>(16.848)</td><td class="vm">×2,18</td><td>(36.729)</td><td>(35.412)</td><td class="ah-pos">+1.317</td><td class="ah-pos">+3,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Consumo de materiales y suministros</td><td>(19.688)</td><td class="vm">×2,18</td><td>(42.920)</td><td>(36.816)</td><td class="ah-pos">+6.104</td><td class="ah-pos">+14,2%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Otros alquileres</td><td>(9.090)</td><td class="vm">×2,18</td><td>(19.816)</td><td>(19.153)</td><td class="ah-pos">+663</td><td class="ah-pos">+3,3%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Viáticos y otros servicios al personal</td><td>(7.955)</td><td class="vm">×2,18</td><td>(17.342)</td><td>(14.513)</td><td class="ah-pos">+2.829</td><td class="ah-pos">+16,3%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Seguros</td><td>(4.656)</td><td class="vm">×2,18</td><td>(10.150)</td><td>(7.827)</td><td class="ah-pos">+2.323</td><td class="ah-pos">+22,9%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Otros gastos de mantenimiento</td><td>(5.154)</td><td class="vm">×2,18</td><td>(11.236)</td><td>(11.463)</td><td class="ah-neg">−227</td><td class="ah-neg">−2,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Gastos por demoras y vuelos interrumpidos</td><td>(1.759)</td><td class="vm">×2,18</td><td>(3.835)</td><td>(4.585)</td><td class="ah-neg">−750</td><td class="ah-neg">−19,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Comunicaciones y sistemas</td><td>(2.431)</td><td class="vm">×2,18</td><td>(5.300)</td><td>(9.040)</td><td class="ah-neg">−3.740</td><td class="ah-neg">−70,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Depreciación de prop. de inversión</td><td>—</td><td class="vm">×2,18</td><td>—</td><td>(549)</td><td class="ah-neg">−549</td><td class="ah-neg">n/a</td></tr>
+        <tr class="dr hidden" data-grp="ah-costo"><td>Diversos</td><td>(5.715)</td><td class="vm">×2,18</td><td>(12.459)</td><td>(13.032)</td><td class="ah-neg">−573</td><td class="ah-neg">−4,6%</td></tr>
+
+        <tr class="sub"><td>GANANCIA / (PÉRDIDA) BRUTA</td><td>(85.013)</td><td class="vm">×2,18</td><td>(185.328)</td><td>299.584</td><td class="ah-pos">+484.912</td><td class="ah-pos">+261,7%</td></tr>
+
+        <!-- Gastos comercialización AH -->
+        <tr class="dr-sub" id="ah-gcom-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('ah-gcom')" id="ah-gcom-toggle"><span class="arrow">▶</span> Gastos de comercialización</span></td>
+          <td>(124.910)</td><td class="vm">×2,18</td><td>(272.303)</td><td>(219.143)</td><td class="ah-pos">+53.160</td><td class="ah-pos">+19,5%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Remuneraciones y cargas sociales</td><td>(25.900)</td><td class="vm">×2,18</td><td>(56.462)</td><td>(30.259)</td><td class="ah-pos">+26.203</td><td class="ah-pos">+46,4%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Comunicaciones y sistemas</td><td>(41.997)</td><td class="vm">×2,18</td><td>(91.553)</td><td>(80.627)</td><td class="ah-pos">+10.926</td><td class="ah-pos">+11,9%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Comisiones y gastos de ventas</td><td>(30.635)</td><td class="vm">×2,18</td><td>(66.785)</td><td>(68.786)</td><td class="ah-neg">−2.001</td><td class="ah-neg">−3,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Impuestos, tasas y contribuciones</td><td>(17.951)</td><td class="vm">×2,18</td><td>(39.133)</td><td>(29.032)</td><td class="ah-pos">+10.101</td><td class="ah-pos">+25,8%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Gastos de publicidad y propaganda</td><td>(3.661)</td><td class="vm">×2,18</td><td>(7.981)</td><td>(2.829)</td><td class="ah-pos">+5.152</td><td class="ah-pos">+64,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Seguridad y vigilancia</td><td>(1.121)</td><td class="vm">×2,18</td><td>(2.444)</td><td>(2.162)</td><td class="ah-pos">+282</td><td class="ah-pos">+11,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Otros alquileres</td><td>(528)</td><td class="vm">×2,18</td><td>(1.151)</td><td>(1.807)</td><td class="ah-neg">−656</td><td class="ah-neg">−57,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Otros gastos de mantenimiento</td><td>(823)</td><td class="vm">×2,18</td><td>(1.794)</td><td>(1.101)</td><td class="ah-pos">+693</td><td class="ah-pos">+38,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Viáticos y servicios al personal</td><td>(194)</td><td class="vm">×2,18</td><td>(423)</td><td>(536)</td><td class="ah-neg">−113</td><td class="ah-neg">−26,7%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Consumo de materiales</td><td>(658)</td><td class="vm">×2,18</td><td>(1.434)</td><td>(363)</td><td class="ah-pos">+1.071</td><td class="ah-pos">+74,7%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Depreciación de bienes de uso</td><td>(398)</td><td class="vm">×2,18</td><td>(868)</td><td>(690)</td><td class="ah-pos">+178</td><td class="ah-pos">+20,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Seguros</td><td>(24)</td><td class="vm">×2,18</td><td>(52)</td><td>(65)</td><td class="ah-neg">−13</td><td class="ah-neg">−25,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gcom"><td>Diversos</td><td>(1.019)</td><td class="vm">×2,18</td><td>(2.221)</td><td>(886)</td><td class="ah-pos">+1.335</td><td class="ah-pos">+60,1%</td></tr>
+
+        <!-- Gastos administración AH -->
+        <tr class="dr-sub" id="ah-gadm-sub">
+          <td><span class="drill-toggle" onclick="toggleDrill('ah-gadm')" id="ah-gadm-toggle"><span class="arrow">▶</span> Gastos de administración</span></td>
+          <td>(55.843)</td><td class="vm">×2,18</td><td>(121.737)</td><td>(93.107)</td><td class="ah-pos">+28.630</td><td class="ah-pos">+23,5%</td>
+        </tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Remuneraciones y cargas sociales</td><td>(21.689)</td><td class="vm">×2,18</td><td>(47.282)</td><td>(28.991)</td><td class="ah-pos">+18.291</td><td class="ah-pos">+38,7%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Impuestos, tasas y contribuciones</td><td>(22.746)</td><td class="vm">×2,18</td><td>(49.586)</td><td>(42.873)</td><td class="ah-pos">+6.713</td><td class="ah-pos">+13,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Comunicaciones y sistemas</td><td>(5.083)</td><td class="vm">×2,18</td><td>(11.081)</td><td>(11.337)</td><td class="ah-neg">−256</td><td class="ah-neg">−2,3%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Honorarios y retribuciones</td><td>(2.157)</td><td class="vm">×2,18</td><td>(4.702)</td><td>(3.800)</td><td class="ah-pos">+902</td><td class="ah-pos">+19,2%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Amortización de intangibles</td><td>(1.332)</td><td class="vm">×2,18</td><td>(2.904)</td><td>(359)</td><td class="ah-pos">+2.545</td><td class="ah-pos">+87,6%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Viáticos y servicios al personal</td><td>(878)</td><td class="vm">×2,18</td><td>(1.914)</td><td>(1.586)</td><td class="ah-pos">+328</td><td class="ah-pos">+17,1%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Otros alquileres</td><td>(512)</td><td class="vm">×2,18</td><td>(1.116)</td><td>(1.172)</td><td class="ah-neg">−56</td><td class="ah-neg">−5,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Seguros</td><td>(445)</td><td class="vm">×2,18</td><td>(970)</td><td>(749)</td><td class="ah-pos">+221</td><td class="ah-pos">+22,8%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Consumo de materiales</td><td>(352)</td><td class="vm">×2,18</td><td>(767)</td><td>(543)</td><td class="ah-pos">+224</td><td class="ah-pos">+29,2%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Depreciación de bienes de uso</td><td>(169)</td><td class="vm">×2,18</td><td>(368)</td><td>(252)</td><td class="ah-pos">+116</td><td class="ah-pos">+31,5%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Otros gastos de mantenimiento</td><td>(53)</td><td class="vm">×2,18</td><td>(116)</td><td>(103)</td><td class="ah-pos">+13</td><td class="ah-pos">+11,2%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Otros alquileres</td><td>(512)</td><td class="vm">×2,18</td><td>(1.116)</td><td>(1.172)</td><td class="ah-neg">−56</td><td class="ah-neg">−5,0%</td></tr>
+        <tr class="dr hidden" data-grp="ah-gadm"><td>Diversos</td><td>(424)</td><td class="vm">×2,18</td><td>(924)</td><td>(1.340)</td><td class="ah-neg">−416</td><td class="ah-neg">−45,0%</td></tr>
+
+        <tr class="sub"><td>TOTAL GASTOS ADM. + COMERCIALIZACIÓN</td><td>(180.752)</td><td class="vm">×2,18</td><td>(394.040)</td><td>(312.250)</td><td class="ah-pos">+81.790</td><td class="ah-pos">+20,8%</td></tr>
+        <tr><td>Resultado de inversiones permanentes</td><td>(105)</td><td class="vm">×2,18</td><td>(229)</td><td>183</td><td class="ah-pos">+412</td><td class="ah-pos">+179,9%</td></tr>
+        <tr><td>Resultados financieros y por tenencia (incl. RECPAM)</td><td>119.097</td><td class="vm">×2,18</td><td>259.631</td><td>351.858</td><td class="ah-pos">+92.227</td><td class="ah-pos">+35,5%</td></tr>
+        <tr><td>Otros ingresos y egresos netos</td><td>(25.708)</td><td class="vm">×2,18</td><td>(56.044)</td><td>(88.701)</td><td class="ah-neg">−32.657</td><td class="ah-neg">−58,3%</td></tr>
+        <tr class="sub"><td>GANANCIA / (PÉRDIDA) ANTES DE IMPUESTO</td><td>(172.482)</td><td class="vm">×2,18</td><td>(376.011)</td><td>250.674</td><td class="ah-pos">+626.685</td><td class="ah-pos">+166,7%</td></tr>
+        <tr><td>Impuesto a las ganancias</td><td>(4.133)</td><td class="vm">×2,18</td><td>(9.010)</td><td>20.140</td><td class="ah-pos">+29.150</td><td class="ah-pos">+323,4%</td></tr>
+        <tr class="tot"><td>GANANCIA / (PÉRDIDA) NETA</td><td>(176.615)</td><td class="vm">×2,18</td><td>(385.021)</td><td>270.814</td><td class="ah-pos">+655.835</td><td class="ah-pos">+170,3%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     METODOLOGÍA
+══════════════════════════════════════════ -->
+<div id="tab-metodo" class="sec">
+  <div class="st">Metodología y Notas</div>
+  <div class="hg">
+    <div class="hc">
+      <div class="hct">📊 Análisis Vertical</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        Expresa cada rubro como porcentaje de una base del <strong>mismo período</strong>.<br><br>
+        • <strong>ESP:</strong> base = Total Activo<br>
+        • <strong>EERR:</strong> base = Ingresos por Servicios<br><br>
+        <strong>No requiere ajuste inflacionario:</strong> numerador y denominador están en la misma moneda del mismo período. Permite comparar estructuras, no valores absolutos.
+      </div>
+    </div>
+    <div class="hc">
+      <div class="hct">📈 Análisis Horizontal</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        Compara el <strong>mismo rubro entre períodos distintos</strong>.<br><br>
+        <code style="background:rgba(0,87,168,.15);padding:3px 7px;border-radius:4px;font-size:11px">Var. % = (2024 − 2023 re-expr.) / |2023 re-expr.| × 100</code><br><br>
+        <strong>Requiere moneda homogénea.</strong> La convención de color refleja el impacto <strong>financiero</strong>: <span style="color:var(--pos)">■ verde = favorable</span> (activo sube, pasivo baja, PN mejora, ingreso sube, costo baja, resultado positivo mejora) y <span style="color:var(--neg)">■ rojo = desfavorable</span> (lo opuesto).
+      </div>
+    </div>
+    <div class="hc">
+      <div class="hct">⚡ Re-expresión por inflación</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        Los EECC 2023 están en moneda constante dic-2023. Para expresarlos en pesos de dic-2024:<br><br>
+        <code style="background:rgba(245,166,35,.1);padding:3px 7px;border-radius:4px;font-size:11px;color:var(--sun)">Factor = 1 + 1,18 = 2,18</code><br><br>
+        Factor derivado de la re-expresión oficial aplicada por Aerolíneas en sus EECC 2024, auditados por KPMG.
+      </div>
+    </div>
+    <div class="hc">
+      <div class="hct">🔽 Drill Down disponible</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        Los siguientes rubros tienen apertura por naturaleza (Anexo I) expandible con ▶:<br><br>
+        • <strong>Apertura de ingresos</strong> (AV y AH)<br>
+        • <strong>Costo de los servicios prestados</strong> (AV y AH)<br>
+        • <strong>Gastos de comercialización</strong> (AV y AH)<br>
+        • <strong>Gastos de administración</strong> (AV y AH)
+      </div>
+    </div>
+    <div class="hc">
+      <div class="hct">📁 Fuente de datos</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        Datos extraídos de los <strong>Estados Contables auditados por KPMG</strong>, publicados en el sitio oficial de <strong>Aerolíneas Argentinas</strong>:<br><br>
+        • EECC 2024: moneda constante dic-2024, emitido 15/05/2025<br>
+        • EECC 2023: moneda constante dic-2023, emitido 18/04/2024<br><br>
+        Los saldos 2023 del EECC propio difieren de los comparativos del EECC 2024 (re-expresados a dic-2024).
+      </div>
+    </div>
+    <div class="hc">
+      <div class="hct">⚠️ Notas de análisis</div>
+      <div style="font-size:12.5px;color:var(--txt);line-height:1.8">
+        <span class="pill n" style="margin-bottom:5px;display:inline-block">PN negativo</span><br>
+        El patrimonio neto es negativo en ambos ejercicios (−$170.142M en 2023 y −$215.255M en 2024).<br><br>
+        <span class="pill u" style="margin-bottom:5px;display:inline-block">RECPAM significativo</span><br>
+        Los resultados financieros incluyen el RECPAM, que tiene impacto material bajo RT 6 FACPCE.<br><br>
+        <span class="pill u" style="margin-bottom:5px;display:inline-block">Reclasificaciones</span><br>
+        Variaciones muy pronunciadas en ciertos rubros del pasivo responden a reclasificaciones entre ejercicios, no a movimientos económicos reales.
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="fl">
+    <strong style="color:var(--txt)">Aerolíneas Argentinas S.A. — Análisis Financiero 2023–2024</strong><br>
+    Análisis Vertical: valores nominales de cada período · Análisis Horizontal: 2023 re-expresado ×2,18 (pesos constantes dic-2024)
+  </div>
+  <div class="fr">
+    Fuente: EECC oficiales · Aerolíneas Argentinas<br>
+    Auditado por KPMG · Moneda: $ ARS · Millones
+  </div>
+</footer>
+
+<script>
+function showTab(name) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function toggleDrill(grp) {
+  const rows = document.querySelectorAll(`[data-grp="${grp}"]`);
+  const toggle = document.getElementById(grp+'-toggle');
+  const isOpen = toggle.classList.contains('open');
+  rows.forEach(r => r.classList.toggle('hidden', isOpen));
+  toggle.classList.toggle('open', !isOpen);
+}
+</script>
+</body>
+</html>

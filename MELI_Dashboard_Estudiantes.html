@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MELI — Dashboard Financiero Integral 2022–2025 · Versión Clase</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f9;--surface:#fff;--surface2:#f0f2f5;--border:#e2e6ed;--border2:#c8cfd9;
+  --text:#111827;--t2:#4b5563;--t3:#9ca3af;
+  --accent:#0f766e;--accent-l:#e6f7f5;
+  --good:#059669;--good-bg:#ecfdf5;--good-b:#a7f3d0;
+  --warn:#d97706;--warn-bg:#fffbeb;--warn-b:#fde68a;
+  --bad:#dc2626;--bad-bg:#fef2f2;--bad-b:#fecaca;
+  --info:#2563eb;--info-bg:#eff6ff;--info-b:#bfdbfe;
+  --neu:#6b7280;--neu-bg:#f9fafb;--neu-b:#e5e7eb;
+  --r:10px;--rs:6px;
+}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+a{color:var(--accent)}
+
+/* HEADER */
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;position:sticky;top:0;z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;height:54px;max-width:1500px;margin:0 auto}
+.logo{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.logo em{background:var(--accent);color:#fff;font-style:normal;font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;margin-left:6px;letter-spacing:.04em}
+.hdr-sub{font-size:11px;color:var(--t3);margin-left:12px}
+.hdr-r{font-size:11px;color:var(--t3)}
+
+/* KPI BAR */
+.kpibar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px}
+.kpibar-in{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;max-width:1500px;margin:0 auto}
+.kpi{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px}
+.kpi-l{font-size:10px;color:var(--t3);margin-bottom:2px}
+.kpi-v{font-size:18px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace;line-height:1}
+.kpi-d{font-size:10px;margin-top:2px}
+.g{color:var(--good)}.w{color:var(--warn)}.r{color:var(--bad)}.n{color:var(--t2)}.bl{color:var(--info)}
+
+/* LAYOUT */
+.wrap{max-width:1500px;margin:0 auto;padding:20px 28px 60px}
+
+/* NAV */
+.nav-outer{display:flex;gap:4px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:5px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.nb{flex:1;min-width:90px;background:none;border:none;border-radius:var(--rs);padding:7px 12px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s;font-family:inherit;text-align:center;white-space:nowrap}
+.nb:hover{background:var(--surface2);color:var(--text)}
+.nb.on{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(15,118,110,.3)}
+
+/* SECTION */
+.sec-hdr{margin-bottom:14px}
+.sec-title{font-size:15px;font-weight:600}
+.sec-sub{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* TABLES */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:16px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:860px}
+thead{background:var(--surface2);border-bottom:1px solid var(--border)}
+th{padding:9px 12px;font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.07em;text-transform:uppercase;text-align:right;white-space:nowrap}
+th:first-child{text-align:left}th:nth-child(2){text-align:left}th.tl{text-align:left}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;text-align:right}
+td:first-child{text-align:left}td:nth-child(2){text-align:left}td.tl{text-align:left}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbfc}
+.cat-row td{background:var(--surface2);font-size:10px;font-weight:700;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-bottom:1px solid var(--border)}
+.cat-row:hover td{background:var(--surface2)}
+.ind{font-size:13px;font-weight:500}
+.ind-s{font-size:10px;color:var(--t3);margin-top:1px}
+.fml{font-family:'SF Mono','JetBrains Mono',monospace;font-size:10px;color:var(--info);background:var(--info-bg);padding:2px 6px;border-radius:3px;display:inline-block}
+.val{font-family:'SF Mono','JetBrains Mono',monospace;font-size:13px;font-weight:600;white-space:nowrap}
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;margin-bottom:4px;letter-spacing:.03em}
+.bg{background:var(--good-bg);color:var(--good)}.bw{background:var(--warn-bg);color:var(--warn)}
+.br{background:var(--bad-bg);color:var(--bad)}.bi{background:var(--info-bg);color:var(--info)}
+.bn{background:var(--neu-bg);color:var(--neu)}
+.interp{font-size:11px;color:var(--t2);line-height:1.65}
+.interp strong{color:var(--text);font-weight:600}
+
+/* CHARTS */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.cgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px}
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.ct{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px}
+.cs{font-size:10px;color:var(--t3);margin-bottom:10px}
+.cw{position:relative;height:170px}
+
+/* DUPONT */
+.yr-tgl{display:flex;gap:5px;margin-bottom:12px}
+.yb{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:500;color:var(--t2);cursor:pointer;font-family:inherit;transition:all .15s}
+.yb.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dp-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:14px}
+.dp-formula{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dp-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 16px;text-align:center;min-width:110px;flex:1}
+.dp-box.res{background:var(--accent-l);border-color:var(--accent)}
+.dp-l{font-size:10px;color:var(--t3);margin-bottom:3px}
+.dp-v{font-size:20px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace}
+.dp-d{font-size:9px;color:var(--t3);margin-top:2px}
+.dp-op{font-size:20px;color:var(--t3);flex-shrink:0}
+
+/* FS tables */
+.pct-g{color:var(--good);font-size:10px}
+.pct-r{color:var(--bad);font-size:10px}
+.pct-n{color:var(--t3);font-size:10px}
+.pct-w{color:var(--warn);font-size:10px}
+.num{font-family:'SF Mono','JetBrains Mono',monospace;font-size:12px;text-align:right}
+.bold-row td{font-weight:700;background:var(--surface2)}
+.bold-row:hover td{background:var(--surface2)}
+.indent{padding-left:24px!important}
+.indent2{padding-left:36px!important}
+
+/* INSIGHT BOXES */
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ins{border-radius:var(--rs);padding:12px 14px;font-size:12px;line-height:1.65}
+.ins strong{font-weight:600}
+.ins-g{background:var(--good-bg);border-left:3px solid var(--good)}
+.ins-w{background:var(--warn-bg);border-left:3px solid var(--warn)}
+.ins-r{background:var(--bad-bg);border-left:3px solid var(--bad)}
+.ins-i{background:var(--info-bg);border-left:3px solid var(--info)}
+
+/* CCE */
+.cce-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cce-flow{display:flex;align-items:center;gap:0;margin:12px 0;overflow-x:auto}
+.cce-node{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;text-align:center;min-width:95px;flex-shrink:0}
+.cce-node.hl{background:var(--accent-l);border-color:var(--accent)}
+.cce-nl{font-size:9px;color:var(--t3)}
+.cce-nd{font-size:14px;font-weight:700;font-family:'SF Mono','JetBrains Mono',monospace}
+.cce-ar{font-size:18px;color:var(--t3);padding:0 5px;flex-shrink:0}
+.cce-calc{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px}
+.cce-it{display:flex;align-items:center;gap:6px;font-size:11px}
+
+/* TAB */
+.tc{display:none}.tc.on{display:block}
+
+/* FOOTER */
+.footer{text-align:center;font-size:10px;color:var(--t3);padding:20px 28px;border-top:1px solid var(--border);background:var(--surface);margin-top:20px}
+
+/* LEGEND */
+.leg{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.leg-i{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--t2)}
+.leg-d{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+@media(max-width:900px){.cgrid,.cgrid3,.insight-grid{grid-template-columns:1fr}.kpibar-in{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-in">
+    <div style="display:flex;align-items:center">
+      <div class="logo">MercadoLibre <em>MELI</em></div>
+      <div class="hdr-sub">Dashboard Financiero Integral · FY 2022–2025 · USD millones</div>
+    </div>
+    <div class="hdr-r">Fuente: SEC filings &amp; EX-99.1 Shareholder Letters</div>
+  </div>
+</div>
+
+<div class="kpibar">
+  <div class="kpibar-in">
+    <div class="kpi"><div class="kpi-l">Ingresos 2025</div><div class="kpi-v g">$28.9B</div><div class="kpi-d g">↑ +39% vs 2024</div></div>
+    <div class="kpi"><div class="kpi-l">EBITDA 2025</div><div class="kpi-v g">$4.02B</div><div class="kpi-d g">↑ +24% vs 2024</div></div>
+    <div class="kpi"><div class="kpi-l">Utilidad neta 2025</div><div class="kpi-v w">$2.00B</div><div class="kpi-d w">↑ +5% — presión fiscal</div></div>
+    <div class="kpi"><div class="kpi-l">ROE 2025</div><div class="kpi-v g">29.6%</div><div class="kpi-d r">↓ desde 43.9% en 2024</div></div>
+    <div class="kpi"><div class="kpi-l">Cobertura intereses</div><div class="kpi-v g">20.0x</div><div class="kpi-d g">↑ desde 3.2x en 2022</div></div>
+    <div class="kpi"><div class="kpi-l">Cartera financiera</div><div class="kpi-v bl">$16.4B</div><div class="kpi-d g">↑ +61% vs 2024</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="nav-outer">
+    <button class="nb on" onclick="st('liq',this)">Liquidez</button>
+    <button class="nb" onclick="st('end',this)">Endeudamiento</button>
+    <button class="nb" onclick="st('cob',this)">Cobertura</button>
+    <button class="nb" onclick="st('act',this)">Actividad</button>
+    <button class="nb" onclick="st('rent',this)">Rentabilidad</button>
+    <button class="nb" onclick="st('fin',this)">Negocio Financiero</button>
+    <button class="nb" onclick="st('dup',this)">DuPont</button>
+    <button class="nb" onclick="st('bs',this)">Balance Sheet</button>
+    <button class="nb" onclick="st('is',this)">Est. Resultados</button>
+    <button class="nb" onclick="st('cf',this)">Cash Flow</button>
+    <button class="nb" onclick="st('res',this)">Resumen</button>
+  </div>
+
+<!-- ══════════════════════════════════════════
+     LIQUIDEZ
+══════════════════════════════════════════ -->
+<div id="tab-liq" class="tc on">
+  <div class="sec-hdr"><div class="sec-title">Liquidez</div><div class="sec-sub">Capacidad de cubrir compromisos de corto plazo</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Ratios de liquidez</div><div class="cs">Corriente · Seca · Cash ratio</div><div class="cw"><canvas id="cLiq"></canvas></div></div>
+    <div class="cc"><div class="ct">Capital de trabajo (USD M)</div><div class="cs">Activo corriente − Pasivo corriente</div><div class="cw"><canvas id="cCT"></canvas></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr><td><div class="ind">Liquidez corriente</div><div class="ind-s">Current ratio</div></td><td><span class="fml">AC/PC</span></td><td><span class="val g">1.28</span></td><td><span class="val g">1.27</span></td><td><span class="val w">1.21</span></td><td><span class="val w">1.17</span></td></tr>
+      <tr><td><div class="ind">Liquidez seca</div><div class="ind-s">Quick ratio / Prueba ácida</div></td><td><span class="fml">(AC−Inv)/PC</span></td><td><span class="val g">1.26</span></td><td><span class="val g">1.24</span></td><td><span class="val w">1.20</span></td><td><span class="val w">1.15</span></td></tr>
+      <tr><td><div class="ind">Liquidez de corto plazo</div><div class="ind-s">Cash ratio</div></td><td><span class="fml">(Caja+IT)/PC</span></td><td><span class="val g">0.50</span></td><td><span class="val g">0.53</span></td><td><span class="val w">0.43</span></td><td><span class="val r">0.22</span></td></tr>
+      <tr><td><div class="ind">Capital de trabajo</div><div class="ind-s">Working capital / Fondo de maniobra</div></td><td><span class="fml">AC−PC</span></td><td><span class="val g">$2.39B</span></td><td><span class="val g">$3.00B</span></td><td><span class="val g">$3.54B</span></td><td><span class="val g">$4.94B</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="cce-box">
+    <strong style="font-size:12px">Ciclo de Conversión de Efectivo (CCE) — 2025</strong>
+    <div class="cce-flow">
+      <div class="cce-node"><div class="cce-nl">Compra mercadería</div><div class="cce-nd">Día 0</div></div>
+      <div class="cce-ar">→</div>
+      <div class="cce-node"><div class="cce-nl">Venta al cliente</div><div class="cce-nd">Día 13</div></div>
+      <div class="cce-ar">→</div>
+      <div class="cce-node"><div class="cce-nl">Cobro al cliente</div><div class="cce-nd">Día 18</div></div>
+      <div class="cce-ar">→</div>
+      <div class="cce-node hl"><div class="cce-nl">Pago al proveedor</div><div class="cce-nd" style="color:var(--accent)">Día 102</div></div>
+    </div>
+    <div class="cce-calc">
+      <div class="cce-it"><span class="n">Días stock:</span><span class="val w">13 d</span></div>
+      <div class="cce-it"><span class="n">+ Días cobranza (correg.):</span><span class="val w">32 d</span></div>
+      <div class="cce-it"><span class="n">− Días pago:</span><span class="val g">102 d</span></div>
+      <div class="cce-it"><span style="font-weight:700;color:var(--text)">= CCE:</span><span class="val g" style="font-size:16px">−57 días</span></div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ENDEUDAMIENTO
+══════════════════════════════════════════ -->
+<div id="tab-end" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Endeudamiento</div><div class="sec-sub">Grado de utilización del capital ajeno vs. capital propio o activo total</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Estructura de capital (% del activo)</div><div class="cs">Patrimonio · Deuda financiera · Otros pasivos</div><div class="cw"><canvas id="cCap"></canvas></div></div>
+    <div class="cc"><div class="ct">Deuda financiera / Activos (%)</div><div class="cs">Ratio más honesto del apalancamiento real</div><div class="cw"><canvas id="cDF"></canvas></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr><td><div class="ind">Endeudamiento sobre PN</div><div class="ind-s">Debt-to-equity</div></td><td><span class="fml">Pasivo Total/PN</span></td><td><span class="val r">6.52x</span></td><td><span class="val w">4.75x</span></td><td><span class="val w">4.79x</span></td><td><span class="val w">5.32x</span></td></tr>
+      <tr><td><div class="ind">Endeudamiento sobre activo total</div><div class="ind-s">Total debt ratio</div></td><td><span class="fml">Pasivo Total/AT</span></td><td><span class="val r">86.7%</span></td><td><span class="val r">82.6%</span></td><td><span class="val r">82.7%</span></td><td><span class="val r">84.2%</span></td></tr>
+      <tr><td><div class="ind">Deuda financiera / Activos</div><div class="ind-s">Financial debt ratio (ajustado)</div></td><td><span class="fml">Préstamos/AT</span></td><td><span class="val r">39.4%</span></td><td><span class="val w">30.2%</span></td><td><span class="val g">27.2%</span></td><td><span class="val g">21.7%</span></td></tr>
+      <tr><td><div class="ind">Multiplicador de equity</div><div class="ind-s">Equity multiplier</div></td><td><span class="fml">AT/PN</span></td><td><span class="val r">7.52x</span></td><td><span class="val w">5.75x</span></td><td><span class="val w">5.79x</span></td><td><span class="val w">6.32x</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     COBERTURA
+══════════════════════════════════════════ -->
+<div id="tab-cob" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Cobertura</div><div class="sec-sub">Capacidad de pago del costo financiero de la deuda</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Cobertura de intereses</div><div class="cs">EBIT y EBITDA / Intereses (veces)</div><div class="cw"><canvas id="cCov"></canvas></div></div>
+    <div class="cc"><div class="ct">Deuda financiera / EBITDA</div><div class="cs">Años de EBITDA para repagar — objetivo &lt;3x</div><div class="cw"><canvas id="cDE"></canvas></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr><td><div class="ind">Cobertura de intereses (EBIT)</div><div class="ind-s">Interest coverage ratio — TIE</div></td><td><span class="fml">EBIT/Intereses</span></td><td><span class="val w">3.2x</span></td><td><span class="val g">4.8x</span></td><td><span class="val g">15.9x</span></td><td><span class="val g">20.0x</span></td></tr>
+      <tr><td><div class="ind">Cobertura de intereses (EBITDA)</div><div class="ind-s">EBITDA coverage ratio</div></td><td><span class="fml">EBITDA/Intereses</span></td><td><span class="val w">4.5x</span></td><td><span class="val g">6.2x</span></td><td><span class="val g">19.7x</span></td><td><span class="val g">25.1x</span></td></tr>
+      <tr><td><div class="ind">Deuda financiera / EBITDA</div><div class="ind-s">Net leverage ratio</div></td><td><span class="fml">Deuda Fin./EBITDA</span></td><td><span class="val r">7.1x</span></td><td><span class="val w">4.0x</span></td><td><span class="val w">2.8x</span></td><td><span class="val g">2.3x</span></td></tr>
+      <tr><td><div class="ind">FCO / Deuda financiera</div><div class="ind-s">Cash flow to debt ratio</div></td><td><span class="fml">FCO/Deuda Fin.</span></td><td><span class="val r">0.61x</span></td><td><span class="val g">1.17x</span></td><td><span class="val g">1.33x</span></td><td><span class="val g">1.32x</span></td></tr>
+      <tr><td><div class="ind">EBITDA</div><div class="ind-s">Earnings before interest, taxes, D&amp;A</div></td><td><span class="fml">EBIT+D&amp;A</span></td><td><span class="val w">$1.44B</span></td><td><span class="val w">$2.35B</span></td><td><span class="val g">$3.25B</span></td><td><span class="val g">$4.02B</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ACTIVIDAD
+══════════════════════════════════════════ -->
+<div id="tab-act" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Actividad</div><div class="sec-sub">Eficiencia en el uso de activos y gestión del ciclo operativo</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Días del ciclo operativo</div><div class="cs">Cobranza (corregido) · Stock · Pago a proveedores</div><div class="cw"><canvas id="cDays"></canvas></div></div>
+    <div class="cc"><div class="ct">Rotaciones clave</div><div class="cs">Inventarios · Activos totales · Capital de trabajo</div><div class="cw"><canvas id="cRot"></canvas></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="6">Créditos y cobranzas</td></tr>
+      <tr><td><div class="ind">Rotación de créditos</div><div class="ind-s">Receivables turnover</div></td><td><span class="fml">Rev.Prod./Prom.CxC</span></td><td><span class="val g">8.4x</span></td><td><span class="val g">10.4x</span></td><td><span class="val g">10.4x</span></td><td><span class="val g">11.4x</span></td></tr>
+      <tr><td><div class="ind">Días de cobranza (DSO corregido)</div><div class="ind-s">Days sales outstanding — sobre Net product revenues</div></td><td><span class="fml">Prom.CxC/Rev.Prod.×365</span></td><td><span class="val g">43 d</span></td><td><span class="val g">35 d</span></td><td><span class="val g">35 d</span></td><td><span class="val g">32 d</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Inventarios</td></tr>
+      <tr><td><div class="ind">Rotación de inventarios</div><div class="ind-s">Inventory turnover</div></td><td><span class="fml">CMV/Prom.Inv.</span></td><td><span class="val g">35x</span></td><td><span class="val g">31x</span></td><td><span class="val g">38x</span></td><td><span class="val g">28x</span></td></tr>
+      <tr><td><div class="ind">Días de stock (DIO)</div><div class="ind-s">Days inventory outstanding</div></td><td><span class="fml">Prom.Inv./CMV×365</span></td><td><span class="val g">10 d</span></td><td><span class="val g">12 d</span></td><td><span class="val g">10 d</span></td><td><span class="val g">13 d</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Proveedores</td></tr>
+      <tr><td><div class="ind">Rotación de proveedores</div><div class="ind-s">Payables turnover</div></td><td><span class="fml">Compras/Prom.Deudas Com.</span></td><td><span class="val g">3.9x</span></td><td><span class="val g">3.4x</span></td><td><span class="val g">3.5x</span></td><td><span class="val g">3.6x</span></td></tr>
+      <tr><td><div class="ind">Días de pago (DPO)</div><div class="ind-s">Days payable outstanding</div></td><td><span class="fml">Prom.Deudas/Compras×365</span></td><td><span class="val g">95 d</span></td><td><span class="val g">106 d</span></td><td><span class="val g">104 d</span></td><td><span class="val g">102 d</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Eficiencia del activo</td></tr>
+      <tr><td><div class="ind">Rotación de activos totales</div><div class="ind-s">Asset turnover</div></td><td><span class="fml">Ventas/AT</span></td><td><span class="val w">0.77x</span></td><td><span class="val g">0.82x</span></td><td><span class="val g">0.82x</span></td><td><span class="val w">0.68x</span></td></tr>
+      <tr><td><div class="ind">Rotación de activo fijo</div><div class="ind-s">Fixed asset turnover</div></td><td><span class="fml">Ventas/Activo Fijo</span></td><td><span class="val g">10.6x</span></td><td><span class="val g">11.6x</span></td><td><span class="val g">15.1x</span></td><td><span class="val g">12.5x</span></td></tr>
+      <tr><td><div class="ind">Rotación de capital de trabajo</div><div class="ind-s">Working capital turnover</div></td><td><span class="fml">Ventas/Cap.Trab.</span></td><td><span class="val g">4.4x</span></td><td><span class="val g">4.8x</span></td><td><span class="val g">5.9x</span></td><td><span class="val g">5.8x</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     RENTABILIDAD
+══════════════════════════════════════════ -->
+<div id="tab-rent" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Rentabilidad</div><div class="sec-sub">Retorno generado sobre ventas, activos y capital propio invertido</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Evolución de márgenes (%)</div><div class="cs">Bruto · EBITDA · Operativo · Neto</div><div class="cw"><canvas id="cMargins"></canvas></div></div>
+    <div class="cc"><div class="ct">ROE y ROA (%)</div><div class="cs">Retorno sobre equity y sobre activos</div><div class="cw"><canvas id="cROE"></canvas></div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="6">Márgenes sobre ventas</td></tr>
+      <tr><td><div class="ind">Margen bruto</div><div class="ind-s">Gross margin</div></td><td><span class="fml">Gan.Bruta/Ventas</span></td><td><span class="val g">49.0%</span></td><td><span class="val g">49.8%</span></td><td><span class="val w">46.1%</span></td><td><span class="val w">44.5%</span></td></tr>
+      <tr><td><div class="ind">Margen EBITDA</div><div class="ind-s">EBITDA margin</div></td><td><span class="fml">EBITDA/Ventas</span></td><td><span class="val w">13.7%</span></td><td><span class="val g">16.2%</span></td><td><span class="val g">15.6%</span></td><td><span class="val w">13.9%</span></td></tr>
+      <tr><td><div class="ind">Margen operativo (EBIT)</div><div class="ind-s">Operating margin</div></td><td><span class="fml">EBIT/Ventas</span></td><td><span class="val w">9.8%</span></td><td><span class="val g">12.6%</span></td><td><span class="val g">12.7%</span></td><td><span class="val w">11.1%</span></td></tr>
+      <tr><td><div class="ind">Margen neto</div><div class="ind-s">Net profit margin</div></td><td><span class="fml">Ut.Neta/Ventas</span></td><td><span class="val r">4.6%</span></td><td><span class="val w">6.8%</span></td><td><span class="val g">9.2%</span></td><td><span class="val w">6.9%</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Retorno sobre inversión</td></tr>
+      <tr><td><div class="ind">ROA</div><div class="ind-s">Return on assets (sobre EBIT)</div></td><td><span class="fml">EBIT/AT</span></td><td><span class="val r">7.5%</span></td><td><span class="val g">10.3%</span></td><td><span class="val g">10.4%</span></td><td><span class="val w">7.5%</span></td></tr>
+      <tr><td><div class="ind">ROE</div><div class="ind-s">Return on equity</div></td><td><span class="fml">Ut.Neta/PN</span></td><td><span class="val w">26.4%</span></td><td><span class="val g">32.1%</span></td><td><span class="val g">43.9%</span></td><td><span class="val g">29.6%</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     NEGOCIO FINANCIERO
+══════════════════════════════════════════ -->
+<div id="tab-fin" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Negocio Financiero — Mercado Crédito &amp; Mercado Pago</div><div class="sec-sub">Métricas específicas para evaluar la calidad y escala de la cartera crediticia</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">Cartera financiera total (USD M)</div><div class="cs">Préstamos + Créditos tarjeta (corriente + no corriente)</div><div class="cw"><canvas id="cPort"></canvas></div></div>
+    <div class="cc"><div class="ct">Previsión por incobrables / Cartera (%)</div><div class="cs">Proxy de tasa de pérdida esperada sobre la cartera</div><div class="cw"><canvas id="cNPL"></canvas></div></div>
+  </div>
+  
+  <div class="tw"><table>
+    <thead><tr><th>Indicador</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="6">Escala y crecimiento de la cartera</td></tr>
+      <tr><td><div class="ind">Cartera total de créditos</div><div class="ind-s">Loans + CC receivables (curr + nc)</div></td><td><span class="fml">Préstamos+CCrecv</span></td><td><span class="val bl">$4.68B</span></td><td><span class="val bl">$6.33B</span></td><td><span class="val bl">$10.18B</span></td><td><span class="val bl">$16.41B</span></td></tr>
+      <tr><td><div class="ind">Préstamos por cobrar (total)</div><div class="ind-s">Loans receivable curr + nc</div></td><td><span class="fml">Loans curr+nc</span></td><td><span class="val bl">$1.74B</span></td><td><span class="val bl">$2.69B</span></td><td><span class="val bl">$4.90B</span></td><td><span class="val bl">$9.37B</span></td></tr>
+      <tr><td><div class="ind">Créditos tarjeta y medios de pago</div><div class="ind-s">CC receivables curr + nc</div></td><td><span class="fml">CC recv curr+nc</span></td><td><span class="val bl">$2.95B</span></td><td><span class="val bl">$3.63B</span></td><td><span class="val bl">$5.29B</span></td><td><span class="val bl">$7.05B</span></td></tr>
+      <tr><td><div class="ind">Crecimiento de cartera YoY</div><div class="ind-s">Portfolio growth rate</div></td><td><span class="fml">ΔCartera/Cartera(t-1)</span></td><td><span class="val n">—</span></td><td><span class="val g">+35%</span></td><td><span class="val g">+61%</span></td><td><span class="val g">+61%</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Calidad crediticia</td></tr>
+      <tr><td><div class="ind">Previsión por incobrables / Cartera</div><div class="ind-s">Provision rate / NPL proxy</div></td><td><span class="fml">Provisión/Cartera</span></td><td><span class="val r">22.9%</span></td><td><span class="val w">16.6%</span></td><td><span class="val w">18.2%</span></td><td><span class="val w">18.8%</span></td></tr>
+      <tr><td><div class="ind">Previsión / Ingresos totales</div><div class="ind-s">Provision as % of revenues</div></td><td><span class="fml">Provisión/Ingresos</span></td><td><span class="val r">10.2%</span></td><td><span class="val g">7.3%</span></td><td><span class="val w">8.9%</span></td><td><span class="val r">10.7%</span></td></tr>
+      <tr><td><div class="ind">Cartera / Patrimonio neto</div><div class="ind-s">Loan to equity ratio</div></td><td><span class="fml">Cartera/PN</span></td><td><span class="val w">2.56x</span></td><td><span class="val g">2.06x</span></td><td><span class="val w">2.34x</span></td><td><span class="val w">2.43x</span></td></tr>
+      <tr class="cat-row"><td colspan="6">Fondeo y cobertura</td></tr>
+      <tr><td><div class="ind">Deuda financiera / Cartera crediticia</div><div class="ind-s">Funding ratio</div></td><td><span class="fml">Deuda Fin./Cartera</span></td><td><span class="val r">1.02x</span></td><td><span class="val g">0.71x</span></td><td><span class="val g">0.56x</span></td><td><span class="val g">0.56x</span></td></tr>
+      <tr><td><div class="ind">FCO / Cartera crediticia</div><div class="ind-s">Operating cash flow to portfolio</div></td><td><span class="fml">FCO/Cartera</span></td><td><span class="val w">0.63x</span></td><td><span class="val g">0.81x</span></td><td><span class="val w">0.78x</span></td><td><span class="val w">0.74x</span></td></tr>
+      <tr><td><div class="ind">Fondos pagaderos a clientes</div><div class="ind-s">Float de Mercado Pago</div></td><td><span class="fml">Pasivo custodia</span></td><td><span class="val bl">$3.45B</span></td><td><span class="val bl">$4.48B</span></td><td><span class="val bl">$6.95B</span></td><td><span class="val bl">$13.03B</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     DUPONT
+══════════════════════════════════════════ -->
+<div id="tab-dup" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Análisis DuPont</div><div class="sec-sub">Descomposición del ROE en rentabilidad · eficiencia · apalancamiento</div></div>
+  <div class="yr-tgl">
+    <button class="yb" onclick="sdp(2022,this)">2022</button>
+    <button class="yb" onclick="sdp(2023,this)">2023</button>
+    <button class="yb" onclick="sdp(2024,this)">2024</button>
+    <button class="yb on" onclick="sdp(2025,this)">2025</button>
+  </div>
+  <div class="dp-wrap" id="dpbox"></div>
+  <div class="tw"><table>
+    <thead><tr><th>Componente</th><th>Fórmula</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr><td><div class="ind">① Margen neto</div><div class="ind-s">Rentabilidad por venta</div></td><td><span class="fml">Ut.Neta/Ventas</span></td><td><span class="val r">4.6%</span></td><td><span class="val w">6.8%</span></td><td><span class="val g">9.2%</span></td><td><span class="val w">6.9%</span></td></tr>
+      <tr><td><div class="ind">② Rotación de activos</div><div class="ind-s">Eficiencia del activo</div></td><td><span class="fml">Ventas/AT</span></td><td><span class="val w">0.77x</span></td><td><span class="val g">0.82x</span></td><td><span class="val g">0.82x</span></td><td><span class="val w">0.68x</span></td></tr>
+      <tr><td><div class="ind">③ Multiplicador de equity</div><div class="ind-s">Amplificador por apalancamiento</div></td><td><span class="fml">AT/PN</span></td><td><span class="val r">7.52x</span></td><td><span class="val w">5.75x</span></td><td><span class="val w">5.79x</span></td><td><span class="val w">6.32x</span></td></tr>
+      <tr><td><div class="ind">= ROE DuPont (①×②×③)</div><div class="ind-s">Retorno resultante</div></td><td><span class="fml">M×AT×Mult.</span></td><td><span class="val w">26.4%</span></td><td><span class="val g">32.1%</span></td><td><span class="val g">43.9%</span></td><td><span class="val g">29.6%</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     BALANCE SHEET
+══════════════════════════════════════════ -->
+<div id="tab-bs" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Balance Sheet</div><div class="sec-sub">Análisis vertical (% del activo total) y horizontal (variación YoY) · USD millones</div></div>
+  
+  <div class="tw"><table>
+    <thead><tr><th>Línea del Balance</th><th>2022</th><th>V%22</th><th>2023</th><th>V%23</th><th>H%23</th><th>2024</th><th>V%24</th><th>H%24</th><th>2025</th><th>V%25</th><th>H%25</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="10">ACTIVOS CORRIENTES</td></tr>
+      <tr><td class="indent">Efectivo y equivalentes</td><td class="num">1.910</td><td class="pct-n">13.9%</td><td class="num">2.556</td><td class="pct-n">14.5%</td><td class="pct-g">+33.8%</td><td class="num">2.635</td><td class="pct-n">10.5%</td><td class="pct-n">+3.1%</td><td class="num">3.670</td><td class="pct-n">8.6%</td><td class="pct-g">+39.3%</td></tr>
+      <tr><td class="indent">Efectivo restringido</td><td class="num">1.453</td><td class="pct-n">10.6%</td><td class="num">1.292</td><td class="pct-n">7.3%</td><td class="pct-r">−11.1%</td><td class="num">2.064</td><td class="pct-n">8.2%</td><td class="pct-g">+59.8%</td><td class="num">9.867</td><td class="pct-w">23.1%</td><td class="pct-g">+378%</td></tr>
+      <tr><td class="indent">Inversiones corto plazo</td><td class="num">2.339</td><td class="pct-n">17.0%</td><td class="num">3.480</td><td class="pct-n">19.7%</td><td class="pct-g">+48.8%</td><td class="num">4.485</td><td class="pct-n">17.8%</td><td class="pct-g">+28.9%</td><td class="num">2.629</td><td class="pct-n">6.2%</td><td class="pct-r">−41.4%</td></tr>
+      <tr><td class="indent">Cuentas por cobrar, neto</td><td class="num">130</td><td class="pct-n">0.9%</td><td class="num">156</td><td class="pct-n">0.9%</td><td class="pct-n">+20.0%</td><td class="num">255</td><td class="pct-n">1.0%</td><td class="pct-g">+63.5%</td><td class="num">369</td><td class="pct-n">0.9%</td><td class="pct-g">+44.7%</td></tr>
+      <tr><td class="indent">Créditos tarjeta/medios pago (corr.)</td><td class="num">2.946</td><td class="pct-n">21.4%</td><td class="num">3.632</td><td class="pct-n">20.6%</td><td class="pct-g">+23.3%</td><td class="num">5.288</td><td class="pct-n">21.0%</td><td class="pct-g">+45.6%</td><td class="num">6.893</td><td class="pct-n">16.2%</td><td class="pct-g">+30.4%</td></tr>
+      <tr><td class="indent">Préstamos por cobrar (corr.)</td><td class="num">1.704</td><td class="pct-n">12.4%</td><td class="num">2.629</td><td class="pct-n">14.9%</td><td class="pct-g">+54.3%</td><td class="num">4.716</td><td class="pct-w">18.7%</td><td class="pct-g">+79.4%</td><td class="num">8.855</td><td class="pct-w">20.8%</td><td class="pct-g">+87.8%</td></tr>
+      <tr><td class="indent">Inventarios</td><td class="num">152</td><td class="pct-n">1.1%</td><td class="num">238</td><td class="pct-n">1.3%</td><td class="pct-g">+56.6%</td><td class="num">296</td><td class="pct-n">1.2%</td><td class="pct-n">+24.4%</td><td class="num">570</td><td class="pct-n">1.3%</td><td class="pct-g">+92.6%</td></tr>
+      <tr><td class="indent">Otros activos corrientes</td><td class="num">304</td><td class="pct-n">2.2%</td><td class="num">277</td><td class="pct-n">1.6%</td><td class="pct-r">−8.9%</td><td class="num">403</td><td class="pct-n">1.6%</td><td class="pct-g">+45.5%</td><td class="num">720</td><td class="pct-n">1.7%</td><td class="pct-g">+78.7%</td></tr>
+      <tr class="bold-row"><td>Total activos corrientes</td><td class="num">10.953</td><td class="pct-n">79.7%</td><td class="num">14.294</td><td class="pct-n">81.0%</td><td class="pct-g">+30.5%</td><td class="num">20.142</td><td class="pct-n">79.9%</td><td class="pct-g">+40.9%</td><td class="num">33.573</td><td class="pct-n">78.7%</td><td class="pct-g">+66.7%</td></tr>
+      <tr class="cat-row"><td colspan="10">ACTIVOS NO CORRIENTES</td></tr>
+      <tr><td class="indent">Inversiones largo plazo</td><td class="num">322</td><td class="pct-n">2.3%</td><td class="num">162</td><td class="pct-n">0.9%</td><td class="pct-r">−49.7%</td><td class="num">1.203</td><td class="pct-n">4.8%</td><td class="pct-g">+642%</td><td class="num">1.764</td><td class="pct-n">4.1%</td><td class="pct-g">+46.6%</td></tr>
+      <tr><td class="indent">Préstamos por cobrar (no corr.)</td><td class="num">32</td><td class="pct-n">0.2%</td><td class="num">65</td><td class="pct-n">0.4%</td><td class="pct-g">+103%</td><td class="num">179</td><td class="pct-n">0.7%</td><td class="pct-g">+175%</td><td class="num">510</td><td class="pct-n">1.2%</td><td class="pct-g">+185%</td></tr>
+      <tr><td class="indent">Bienes de uso (PPE), neto</td><td class="num">993</td><td class="pct-n">7.2%</td><td class="num">1.250</td><td class="pct-n">7.1%</td><td class="pct-g">+25.9%</td><td class="num">1.380</td><td class="pct-n">5.5%</td><td class="pct-g">+10.4%</td><td class="num">2.303</td><td class="pct-n">5.4%</td><td class="pct-g">+66.9%</td></tr>
+      <tr><td class="indent">Activos ROU (arrendamientos)</td><td class="num">656</td><td class="pct-n">4.8%</td><td class="num">899</td><td class="pct-n">5.1%</td><td class="pct-g">+37.0%</td><td class="num">1.098</td><td class="pct-n">4.4%</td><td class="pct-g">+22.1%</td><td class="num">2.201</td><td class="pct-n">5.2%</td><td class="pct-g">+100%</td></tr>
+      <tr><td class="indent">Goodwill</td><td class="num">153</td><td class="pct-n">1.1%</td><td class="num">163</td><td class="pct-n">0.9%</td><td class="pct-n">+6.5%</td><td class="num">149</td><td class="pct-n">0.6%</td><td class="pct-r">−8.6%</td><td class="num">163</td><td class="pct-n">0.4%</td><td class="pct-n">+9.4%</td></tr>
+      <tr><td class="indent">Impuestos diferidos (activo)</td><td class="num">346</td><td class="pct-n">2.5%</td><td class="num">710</td><td class="pct-n">4.0%</td><td class="pct-g">+105%</td><td class="num">802</td><td class="pct-n">3.2%</td><td class="pct-g">+13.0%</td><td class="num">1.541</td><td class="pct-n">3.6%</td><td class="pct-g">+92.1%</td></tr>
+      <tr><td class="indent">Otros activos no corrientes</td><td class="num">281</td><td class="pct-n">2.0%</td><td class="num">203</td><td class="pct-n">1.1%</td><td class="pct-r">−27.8%</td><td class="num">243</td><td class="pct-n">1.0%</td><td class="pct-g">+19.7%</td><td class="num">412</td><td class="pct-n">1.0%</td><td class="pct-g">+69.5%</td></tr>
+      <tr class="bold-row"><td>Total activos no corrientes</td><td class="num">2.783</td><td class="pct-n">20.3%</td><td class="num">3.352</td><td class="pct-n">19.0%</td><td class="pct-g">+20.5%</td><td class="num">5.054</td><td class="pct-n">20.1%</td><td class="pct-g">+50.8%</td><td class="num">9.094</td><td class="pct-n">21.3%</td><td class="pct-g">+79.9%</td></tr>
+      <tr class="bold-row"><td>TOTAL ACTIVOS</td><td class="num">13.736</td><td class="pct-n">100%</td><td class="num">17.646</td><td class="pct-n">100%</td><td class="pct-g">+28.5%</td><td class="num">25.196</td><td class="pct-n">100%</td><td class="pct-g">+42.8%</td><td class="num">42.667</td><td class="pct-n">100%</td><td class="pct-g">+69.3%</td></tr>
+      <tr class="cat-row"><td colspan="10">PASIVOS CORRIENTES</td></tr>
+      <tr><td class="indent">Cuentas por pagar y acumulados</td><td class="num">1.393</td><td class="pct-n">10.1%</td><td class="num">2.117</td><td class="pct-n">12.0%</td><td class="pct-g">+52.0%</td><td class="num">3.196</td><td class="pct-n">12.7%</td><td class="pct-g">+51.0%</td><td class="num">4.502</td><td class="pct-n">10.6%</td><td class="pct-g">+40.9%</td></tr>
+      <tr><td class="indent">Fondos pagaderos a clientes</td><td class="num">3.454</td><td class="pct-n">25.1%</td><td class="num">4.475</td><td class="pct-n">25.4%</td><td class="pct-g">+29.6%</td><td class="num">6.954</td><td class="pct-w">27.6%</td><td class="pct-g">+55.4%</td><td class="num">13.029</td><td class="pct-r">30.5%</td><td class="pct-g">+87.4%</td></tr>
+      <tr><td class="indent">Débitos tarjetas (corr.)</td><td class="num">483</td><td class="pct-n">3.5%</td><td class="num">1.072</td><td class="pct-n">6.1%</td><td class="pct-g">+122%</td><td class="num">1.923</td><td class="pct-n">7.6%</td><td class="pct-g">+79.4%</td><td class="num">3.584</td><td class="pct-n">8.4%</td><td class="pct-g">+86.4%</td></tr>
+      <tr><td class="indent">Salarios y cargas sociales</td><td class="num">401</td><td class="pct-n">2.9%</td><td class="num">545</td><td class="pct-n">3.1%</td><td class="pct-g">+35.9%</td><td class="num">727</td><td class="pct-n">2.9%</td><td class="pct-g">+33.4%</td><td class="num">916</td><td class="pct-n">2.1%</td><td class="pct-g">+26.0%</td></tr>
+      <tr><td class="indent">Impuestos por pagar</td><td class="num">414</td><td class="pct-n">3.0%</td><td class="num">477</td><td class="pct-n">2.7%</td><td class="pct-g">+15.2%</td><td class="num">525</td><td class="pct-n">2.1%</td><td class="pct-g">+10.1%</td><td class="num">1.140</td><td class="pct-n">2.7%</td><td class="pct-g">+117%</td></tr>
+      <tr><td class="indent">Préstamos payables (corr.)</td><td class="num">2.131</td><td class="pct-n">15.5%</td><td class="num">2.292</td><td class="pct-n">13.0%</td><td class="pct-g">+7.6%</td><td class="num">2.828</td><td class="pct-n">11.2%</td><td class="pct-g">+23.4%</td><td class="num">4.623</td><td class="pct-n">10.8%</td><td class="pct-g">+63.5%</td></tr>
+      <tr><td class="indent">Arrendamientos (corr.)</td><td class="num">142</td><td class="pct-n">1.0%</td><td class="num">166</td><td class="pct-n">0.9%</td><td class="pct-g">+16.9%</td><td class="num">241</td><td class="pct-n">1.0%</td><td class="pct-g">+45.2%</td><td class="num">430</td><td class="pct-n">1.0%</td><td class="pct-g">+78.4%</td></tr>
+      <tr class="bold-row"><td>Total pasivos corrientes</td><td class="num">8.562</td><td class="pct-n">62.3%</td><td class="num">11.297</td><td class="pct-n">64.0%</td><td class="pct-g">+31.9%</td><td class="num">16.603</td><td class="pct-n">65.9%</td><td class="pct-g">+47.0%</td><td class="num">28.633</td><td class="pct-n">67.1%</td><td class="pct-g">+72.5%</td></tr>
+      <tr class="cat-row"><td colspan="10">PASIVOS NO CORRIENTES</td></tr>
+      <tr><td class="indent">Préstamos payables (no corr.)</td><td class="num">2.627</td><td class="pct-n">19.1%</td><td class="num">2.203</td><td class="pct-n">12.5%</td><td class="pct-r">−16.1%</td><td class="num">2.887</td><td class="pct-n">11.5%</td><td class="pct-g">+31.0%</td><td class="num">4.570</td><td class="pct-n">10.7%</td><td class="pct-g">+58.3%</td></tr>
+      <tr><td class="indent">Arrendamientos (no corr.)</td><td class="num">514</td><td class="pct-n">3.7%</td><td class="num">672</td><td class="pct-n">3.8%</td><td class="pct-g">+30.7%</td><td class="num">894</td><td class="pct-n">3.5%</td><td class="pct-g">+33.0%</td><td class="num">1.769</td><td class="pct-n">4.1%</td><td class="pct-g">+97.9%</td></tr>
+      <tr><td class="indent">Impuestos diferidos (pasivo)</td><td class="num">106</td><td class="pct-n">0.8%</td><td class="num">183</td><td class="pct-n">1.0%</td><td class="pct-g">+72.6%</td><td class="num">204</td><td class="pct-n">0.8%</td><td class="pct-g">+11.5%</td><td class="num">372</td><td class="pct-n">0.9%</td><td class="pct-g">+82.4%</td></tr>
+      <tr><td class="indent">Otros pasivos no corrientes</td><td class="num">100</td><td class="pct-n">0.7%</td><td class="num">220</td><td class="pct-n">1.2%</td><td class="pct-g">+120%</td><td class="num">257</td><td class="pct-n">1.0%</td><td class="pct-g">+16.8%</td><td class="num">375</td><td class="pct-n">0.9%</td><td class="pct-g">+46.0%</td></tr>
+      <tr class="bold-row"><td>Total pasivos no corrientes</td><td class="num">3.347</td><td class="pct-n">24.4%</td><td class="num">3.278</td><td class="pct-n">18.6%</td><td class="pct-r">−2.1%</td><td class="num">4.242</td><td class="pct-n">16.8%</td><td class="pct-g">+29.4%</td><td class="num">7.086</td><td class="pct-n">16.6%</td><td class="pct-g">+67.0%</td></tr>
+      <tr class="bold-row"><td>TOTAL PASIVOS</td><td class="num">11.909</td><td class="pct-n">86.7%</td><td class="num">14.575</td><td class="pct-n">82.6%</td><td class="pct-g">+22.4%</td><td class="num">20.845</td><td class="pct-n">82.7%</td><td class="pct-g">+43.0%</td><td class="num">35.719</td><td class="pct-n">83.7%</td><td class="pct-g">+71.3%</td></tr>
+      <tr class="cat-row"><td colspan="10">PATRIMONIO NETO</td></tr>
+      <tr><td class="indent">Capital adicional pagado</td><td class="num">2.309</td><td class="pct-n">16.8%</td><td class="num">1.770</td><td class="pct-n">10.0%</td><td class="pct-r">−23.3%</td><td class="num">1.770</td><td class="pct-n">7.0%</td><td class="pct-n">0.0%</td><td class="num">1.771</td><td class="pct-n">4.2%</td><td class="pct-n">+0.1%</td></tr>
+      <tr><td class="indent">Acciones en tesorería</td><td class="num">−931</td><td class="pct-r">−6.8%</td><td class="num">−310</td><td class="pct-n">−1.8%</td><td class="pct-g">−66.7%</td><td class="num">−311</td><td class="pct-n">−1.2%</td><td class="pct-n">+0.3%</td><td class="num">−312</td><td class="pct-n">−0.7%</td><td class="pct-n">+0.3%</td></tr>
+      <tr><td class="indent">Ganancias retenidas</td><td class="num">913</td><td class="pct-n">6.6%</td><td class="num">1.901</td><td class="pct-n">10.8%</td><td class="pct-g">+108%</td><td class="num">3.812</td><td class="pct-n">15.1%</td><td class="pct-g">+101%</td><td class="num">5.809</td><td class="pct-n">13.6%</td><td class="pct-g">+52.4%</td></tr>
+      <tr><td class="indent">Pérdidas acumuladas OCI</td><td class="num">−464</td><td class="pct-r">−3.4%</td><td class="num">−290</td><td class="pct-n">−1.6%</td><td class="pct-g">−37.5%</td><td class="num">−920</td><td class="pct-r">−3.7%</td><td class="pct-r">+217%</td><td class="num">−520</td><td class="pct-n">−1.2%</td><td class="pct-g">−43.5%</td></tr>
+      <tr class="bold-row"><td>TOTAL PATRIMONIO NETO</td><td class="num">1.827</td><td class="pct-n">13.3%</td><td class="num">3.071</td><td class="pct-n">17.4%</td><td class="pct-g">+68.1%</td><td class="num">4.351</td><td class="pct-n">17.3%</td><td class="pct-g">+41.7%</td><td class="num">6.748</td><td class="pct-n">15.8%</td><td class="pct-g">+55.1%</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ESTADO DE RESULTADOS
+══════════════════════════════════════════ -->
+<div id="tab-is" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Estado de Resultados</div><div class="sec-sub">Análisis vertical (% de ingresos totales) y horizontal (variación YoY) · USD millones</div></div>
+  
+  <div class="tw"><table>
+    <thead><tr><th>Línea del EERR</th><th>2022</th><th>V%22</th><th>2023</th><th>V%23</th><th>H%23</th><th>2024</th><th>V%24</th><th>H%24</th><th>2025</th><th>V%25</th><th>H%25</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="10">INGRESOS</td></tr>
+      <tr><td>Ingresos por servicios e ing. financieros</td><td class="num">9.442</td><td class="pct-n">89.6%</td><td class="num">12.983</td><td class="pct-n">89.7%</td><td class="pct-g">+37.5%</td><td class="num">18.638</td><td class="pct-n">89.7%</td><td class="pct-g">+43.6%</td><td class="num">25.286</td><td class="pct-n">87.5%</td><td class="pct-g">+35.7%</td></tr>
+      <tr><td>Ingresos por venta de productos</td><td class="num">1.095</td><td class="pct-n">10.4%</td><td class="num">1.490</td><td class="pct-n">10.3%</td><td class="pct-g">+36.1%</td><td class="num">2.139</td><td class="pct-n">10.3%</td><td class="pct-g">+43.6%</td><td class="num">3.607</td><td class="pct-n">12.5%</td><td class="pct-g">+68.6%</td></tr>
+      <tr class="bold-row"><td>INGRESOS NETOS TOTALES</td><td class="num">10.537</td><td class="pct-n">100%</td><td class="num">14.473</td><td class="pct-n">100%</td><td class="pct-g">+37.4%</td><td class="num">20.777</td><td class="pct-n">100%</td><td class="pct-g">+43.6%</td><td class="num">28.893</td><td class="pct-n">100%</td><td class="pct-g">+39.1%</td></tr>
+      <tr class="cat-row"><td colspan="10">COSTO E INVERSIONES</td></tr>
+      <tr><td>Costo de ingresos netos</td><td class="num">−5.374</td><td class="pct-r">51.0%</td><td class="num">−7.267</td><td class="pct-r">50.2%</td><td class="pct-r">+35.2%</td><td class="num">−11.200</td><td class="pct-r">53.9%</td><td class="pct-r">+54.1%</td><td class="num">−16.035</td><td class="pct-r">55.5%</td><td class="pct-r">+43.2%</td></tr>
+      <tr class="bold-row"><td>GANANCIA BRUTA</td><td class="num">5.163</td><td class="pct-g">49.0%</td><td class="num">7.206</td><td class="pct-g">49.8%</td><td class="pct-g">+39.5%</td><td class="num">9.577</td><td class="pct-g">46.1%</td><td class="pct-g">+32.9%</td><td class="num">12.858</td><td class="pct-g">44.5%</td><td class="pct-g">+34.3%</td></tr>
+      <tr><td class="indent">Desarrollo de productos y tecnología</td><td class="num">−1.099</td><td class="pct-n">10.4%</td><td class="num">−1.831</td><td class="pct-n">12.7%</td><td class="pct-r">+66.6%</td><td class="num">−1.934</td><td class="pct-n">9.3%</td><td class="pct-g">+5.6%</td><td class="num">−2.269</td><td class="pct-g">7.9%</td><td class="pct-g">+17.3%</td></tr>
+      <tr><td class="indent">Ventas y marketing</td><td class="num">−1.296</td><td class="pct-n">12.3%</td><td class="num">−1.736</td><td class="pct-n">12.0%</td><td class="pct-r">+34.0%</td><td class="num">−2.191</td><td class="pct-n">10.5%</td><td class="pct-g">+26.2%</td><td class="num">−3.219</td><td class="pct-w">11.1%</td><td class="pct-r">+46.9%</td></tr>
+      <tr><td class="indent">Previsión por incobrables</td><td class="num">−1.073</td><td class="pct-r">10.2%</td><td class="num">−1.050</td><td class="pct-g">7.3%</td><td class="pct-g">−2.1%</td><td class="num">−1.858</td><td class="pct-w">8.9%</td><td class="pct-r">+77.0%</td><td class="num">−3.091</td><td class="pct-r">10.7%</td><td class="pct-r">+66.4%</td></tr>
+      <tr><td class="indent">Gastos generales y administrativos</td><td class="num">−661</td><td class="pct-n">6.3%</td><td class="num">−766</td><td class="pct-n">5.3%</td><td class="pct-g">+15.9%</td><td class="num">−963</td><td class="pct-n">4.6%</td><td class="pct-g">+25.7%</td><td class="num">−1.078</td><td class="pct-g">3.7%</td><td class="pct-g">+11.9%</td></tr>
+      <tr class="bold-row"><td>RESULTADO OPERATIVO (EBIT)</td><td class="num">1.034</td><td class="pct-g">9.8%</td><td class="num">1.823</td><td class="pct-g">12.6%</td><td class="pct-g">+76.3%</td><td class="num">2.631</td><td class="pct-g">12.7%</td><td class="pct-g">+44.3%</td><td class="num">3.201</td><td class="pct-g">11.1%</td><td class="pct-g">+21.7%</td></tr>
+      <tr class="cat-row"><td colspan="10">OTROS RESULTADOS</td></tr>
+      <tr><td>Ingresos financieros y otras ganancias</td><td class="num">265</td><td class="pct-n">2.5%</td><td class="num">723</td><td class="pct-n">5.0%</td><td class="pct-g">+173%</td><td class="num">148</td><td class="pct-n">0.7%</td><td class="pct-r">−79.5%</td><td class="num">138</td><td class="pct-n">0.5%</td><td class="pct-r">−6.8%</td></tr>
+      <tr><td>Gastos financieros y otras pérdidas</td><td class="num">−321</td><td class="pct-n">3.0%</td><td class="num">−378</td><td class="pct-n">2.6%</td><td class="pct-r">+17.8%</td><td class="num">−165</td><td class="pct-g">0.8%</td><td class="pct-g">−56.3%</td><td class="num">−160</td><td class="pct-g">0.6%</td><td class="pct-g">−3.0%</td></tr>
+      <tr><td>Pérdidas por tipo de cambio, neto</td><td class="num">−198</td><td class="pct-n">1.9%</td><td class="num">−615</td><td class="pct-r">4.2%</td><td class="pct-r">+211%</td><td class="num">−182</td><td class="pct-g">0.9%</td><td class="pct-g">−70.4%</td><td class="num">−337</td><td class="pct-w">1.2%</td><td class="pct-r">+85.2%</td></tr>
+      <tr class="bold-row"><td>RESULTADO ANTES DE IMPUESTOS</td><td class="num">780</td><td class="pct-n">7.4%</td><td class="num">1.553</td><td class="pct-n">10.7%</td><td class="pct-g">+99.1%</td><td class="num">2.432</td><td class="pct-n">11.7%</td><td class="pct-g">+56.6%</td><td class="num">2.842</td><td class="pct-n">9.8%</td><td class="pct-g">+16.9%</td></tr>
+      <tr><td>Impuesto a las ganancias</td><td class="num">−298</td><td class="pct-n">2.8%</td><td class="num">−569</td><td class="pct-n">3.9%</td><td class="pct-r">+90.9%</td><td class="num">−521</td><td class="pct-g">2.5%</td><td class="pct-g">−8.4%</td><td class="num">−845</td><td class="pct-r">2.9%</td><td class="pct-r">+62.2%</td></tr>
+      <tr class="bold-row"><td>UTILIDAD NETA</td><td class="num">482</td><td class="pct-n">4.6%</td><td class="num">987</td><td class="pct-n">6.8%</td><td class="pct-g">+105%</td><td class="num">1.911</td><td class="pct-g">9.2%</td><td class="pct-g">+93.6%</td><td class="num">1.997</td><td class="pct-w">6.9%</td><td class="pct-g">+4.5%</td></tr>
+      <tr class="cat-row"><td colspan="10">MÉMORANDUM</td></tr>
+      <tr><td>EBITDA (EBIT + D&amp;A)</td><td class="num">1.437</td><td class="pct-n">13.6%</td><td class="num">2.347</td><td class="pct-n">16.2%</td><td class="pct-g">+63.3%</td><td class="num">3.248</td><td class="pct-g">15.6%</td><td class="pct-g">+38.4%</td><td class="num">4.019</td><td class="pct-g">13.9%</td><td class="pct-g">+23.7%</td></tr>
+      <tr><td>EPS básico (USD)</td><td class="num">$9.57</td><td class="pct-n">—</td><td class="num">$19.64</td><td class="pct-n">—</td><td class="pct-g">+105%</td><td class="num">$37.69</td><td class="pct-n">—</td><td class="pct-g">+92.0%</td><td class="num">$39.40</td><td class="pct-n">—</td><td class="pct-g">+4.5%</td></tr>
+      <tr><td>EPS diluido (USD)</td><td class="num">$9.53</td><td class="pct-n">—</td><td class="num">$19.46</td><td class="pct-n">—</td><td class="pct-g">+104%</td><td class="num">$37.69</td><td class="pct-n">—</td><td class="pct-g">+93.7%</td><td class="num">$39.40</td><td class="pct-n">—</td><td class="pct-g">+4.5%</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CASH FLOW
+══════════════════════════════════════════ -->
+<div id="tab-cf" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Estado de Flujo de Efectivo</div><div class="sec-sub">Análisis de la generación y uso de caja · USD millones</div></div>
+  <div class="cgrid">
+    <div class="cc"><div class="ct">CFO, CFI y CFF (USD M)</div><div class="cs">Flujos operativo, inversión y financiamiento</div><div class="cw"><canvas id="cCF"></canvas></div></div>
+    <div class="cc"><div class="ct">FCO y FCF (USD M)</div><div class="cs">Flujo operativo y libre (FCO − Capex)</div><div class="cw"><canvas id="cFCF"></canvas></div></div>
+  </div>
+  
+  <div class="tw"><table>
+    <thead><tr><th>Línea del Cash Flow</th><th class="tl">Descripción</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="5">ACTIVIDADES OPERATIVAS</td></tr>
+      <tr><td>Utilidad neta</td><td class="num">482</td><td class="num">987</td><td class="num">1.911</td><td class="num">1.997</td></tr>
+      <tr><td class="indent">Pérdidas cambiarias no realizadas</td><td class="num">411</td><td class="num">487</td><td class="num">286</td><td class="num">457</td></tr>
+      <tr><td class="indent">Depreciación y amortización</td><td class="num">403</td><td class="num">524</td><td class="num">617</td><td class="num">818</td></tr>
+      <tr><td class="indent">Provisión por incobrables (no cash)</td><td class="num">1.073</td><td class="num">1.050</td><td class="num">1.858</td><td class="num">3.091</td></tr>
+      <tr><td class="indent">Intereses devengados de inversiones</td><td class="num">−166</td><td class="num">−311</td><td class="num">−415</td><td class="num">−1.216</td></tr>
+      <tr><td class="indent">Cambio en fondos pagaderos clientes</td><td class="num">1.044</td><td class="num">1.502</td><td class="num">3.605</td><td class="num">5.341</td></tr>
+      <tr><td class="indent">Cambio en débitos tarjetas</td><td class="num">128</td><td class="num">693</td><td class="num">1.213</td><td class="num">1.592</td></tr>
+      <tr><td class="indent">Intereses recibidos de inversiones</td><td class="num">123</td><td class="num">255</td><td class="num">229</td><td class="num">584</td></tr>
+      <tr><td class="indent">Otros ajustes operativos</td><td class="num">442</td><td class="num">−47</td><td class="num">−1.286</td><td class="num">452</td></tr>
+      <tr class="bold-row"><td>FLUJO OPERATIVO NETO (FCO)</td><td class="tl interp g"></td><td class="num g">2.940</td><td class="num g">5.140</td><td class="num g">7.918</td><td class="num g">12.116</td></tr>
+      <tr class="cat-row"><td colspan="5">ACTIVIDADES DE INVERSIÓN</td></tr>
+      <tr><td class="indent">Compras de inversiones financieras</td><td class="num">−12.694</td><td class="num">−18.936</td><td class="num">−16.710</td><td class="num">−14.754</td></tr>
+      <tr><td class="indent">Cobros por vencimiento de inversiones</td><td class="num">11.023</td><td class="num">18.100</td><td class="num">13.962</td><td class="num">16.590</td></tr>
+      <tr><td class="indent">Originations de préstamos (Mercado Crédito)</td><td class="num">−1.701</td><td class="num">−2.047</td><td class="num">−4.688</td><td class="num">−6.659</td></tr>
+      <tr><td class="indent">Capex (PPE e intangibles)</td><td class="num">−454</td><td class="num">−509</td><td class="num">−860</td><td class="num">−1.343</td></tr>
+      <tr><td class="indent">Otros flujos de inversión</td><td class="num">−45</td><td class="num">−58</td><td class="num">9</td><td class="num">−13</td></tr>
+      <tr class="bold-row"><td>FLUJO DE INVERSIÓN NETO (CFI)</td><td class="num r">−3.871</td><td class="num r">−3.450</td><td class="num r">−8.287</td><td class="num r">−6.179</td></tr>
+      <tr class="cat-row"><td colspan="5">ACTIVIDADES DE FINANCIAMIENTO</td></tr>
+      <tr><td class="indent">Préstamos tomados</td><td class="num">17.017</td><td class="num">24.963</td><td class="num">19.472</td><td class="num">44.050</td></tr>
+      <tr><td class="indent">Préstamos cancelados</td><td class="num">−15.933</td><td class="num">−24.841</td><td class="num">−17.461</td><td class="num">−41.088</td></tr>
+      <tr><td class="indent">Recompra de acciones</td><td class="num">−148</td><td class="num">−356</td><td class="num">−1</td><td class="num">−1</td></tr>
+      <tr><td class="indent">Arrendamientos financieros</td><td class="num">−20</td><td class="num">−33</td><td class="num">−51</td><td class="num">−57</td></tr>
+      <tr class="bold-row"><td>FLUJO DE FINANCIAMIENTO NETO (CFF)</td><td class="num g">916</td><td class="num r">−267</td><td class="num g">1.959</td><td class="num g">2.904</td></tr>
+      <tr class="cat-row"><td colspan="5">MEMORÁNDUM</td></tr>
+      <tr><td>Efecto tipo de cambio en efectivo</td><td class="num r">−270</td><td class="num r">−938</td><td class="num r">−739</td><td class="num r">−3</td></tr>
+      <tr><td>Variación neta de caja</td><td class="num r">−285</td><td class="num g">485</td><td class="num g">851</td><td class="num g">8.838</td></tr>
+      <tr><td>Capex</td><td class="num">454</td><td class="num">509</td><td class="num">860</td><td class="num">1.343</td></tr>
+      <tr class="bold-row"><td>FREE CASH FLOW (FCF = FCO − Capex)</td><td class="tl interp g"></td><td class="num g">2.486</td><td class="num g">4.631</td><td class="num g">7.058</td><td class="num g">10.773</td></tr>
+      <tr><td>FCO / Ingresos</td><td class="num g">27.9%</td><td class="num g">35.5%</td><td class="num g">38.1%</td><td class="num g">41.9%</td></tr>
+      <tr><td>FCF / Utilidad neta</td><td class="num g">5.2x</td><td class="num g">4.7x</td><td class="num g">3.7x</td><td class="num g">5.4x</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     RESUMEN
+══════════════════════════════════════════ -->
+<div id="tab-res" class="tc">
+  <div class="sec-hdr"><div class="sec-title">Resumen integral</div><div class="sec-sub">Todos los indicadores por categoría · Verde = saludable · Amarillo = atención · Rojo = preocupante en contexto MELI</div></div>
+  <div class="leg"><div class="leg-i"><div class="leg-d" style="background:var(--good)"></div>Saludable</div><div class="leg-i"><div class="leg-d" style="background:var(--warn)"></div>Atención / contexto</div><div class="leg-i"><div class="leg-d" style="background:var(--bad)"></div>Preocupante</div><div class="leg-i"><div class="leg-d" style="background:var(--info)"></div>Informativo</div></div>
+  <div class="tw"><table>
+    <colgroup><col style="width:26%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:34%"></colgroup>
+    <thead><tr><th>Indicador</th><th>2022</th><th>2023</th><th>2024</th><th>2025</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="5">Liquidez</td></tr>
+      <tr><td>Liquidez corriente</td><td><span class="val g">1.28</span></td><td><span class="val g">1.27</span></td><td><span class="val w">1.21</span></td><td><span class="val w">1.17</span></td></tr>
+      <tr><td>Liquidez seca</td><td><span class="val g">1.26</span></td><td><span class="val g">1.24</span></td><td><span class="val w">1.20</span></td><td><span class="val w">1.15</span></td></tr>
+      <tr><td>Cash ratio</td><td><span class="val g">0.50</span></td><td><span class="val g">0.53</span></td><td><span class="val w">0.43</span></td><td><span class="val r">0.22</span></td></tr>
+      <tr><td>Capital de trabajo</td><td><span class="val g">$2.4B</span></td><td><span class="val g">$3.0B</span></td><td><span class="val g">$3.5B</span></td><td><span class="val g">$4.9B</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Endeudamiento</td></tr>
+      <tr><td>Endeudamiento / PN</td><td><span class="val r">6.52x</span></td><td><span class="val w">4.75x</span></td><td><span class="val w">4.79x</span></td><td><span class="val w">5.32x</span></td></tr>
+      <tr><td>Endeudamiento / AT</td><td><span class="val r">86.7%</span></td><td><span class="val r">82.6%</span></td><td><span class="val r">82.7%</span></td><td><span class="val r">84.2%</span></td></tr>
+      <tr><td>Deuda financiera / AT</td><td><span class="val r">39.4%</span></td><td><span class="val w">30.2%</span></td><td><span class="val g">27.2%</span></td><td><span class="val g">21.7%</span></td></tr>
+      <tr><td>Multiplicador de equity</td><td><span class="val r">7.52x</span></td><td><span class="val w">5.75x</span></td><td><span class="val w">5.79x</span></td><td><span class="val w">6.32x</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Cobertura</td></tr>
+      <tr><td>Cobertura intereses (EBIT)</td><td><span class="val w">3.2x</span></td><td><span class="val g">4.8x</span></td><td><span class="val g">15.9x</span></td><td><span class="val g">20.0x</span></td></tr>
+      <tr><td>Cobertura intereses (EBITDA)</td><td><span class="val w">4.5x</span></td><td><span class="val g">6.2x</span></td><td><span class="val g">19.7x</span></td><td><span class="val g">25.1x</span></td></tr>
+      <tr><td>Deuda financiera / EBITDA</td><td><span class="val r">7.1x</span></td><td><span class="val w">4.0x</span></td><td><span class="val w">2.8x</span></td><td><span class="val g">2.3x</span></td></tr>
+      <tr><td>FCO / Deuda financiera</td><td><span class="val r">0.61x</span></td><td><span class="val g">1.17x</span></td><td><span class="val g">1.33x</span></td><td><span class="val g">1.32x</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Actividad</td></tr>
+      <tr><td>Rotación de créditos</td><td><span class="val g">8.4x</span></td><td><span class="val g">10.4x</span></td><td><span class="val g">10.4x</span></td><td><span class="val g">11.4x</span></td></tr>
+      <tr><td>Días de cobranza (DSO corregido)</td><td><span class="val g">43 d</span></td><td><span class="val g">35 d</span></td><td><span class="val g">35 d</span></td><td><span class="val g">32 d</span></td></tr>
+      <tr><td>Rotación de inventarios</td><td><span class="val g">35x</span></td><td><span class="val g">31x</span></td><td><span class="val g">38x</span></td><td><span class="val g">28x</span></td></tr>
+      <tr><td>Días de stock</td><td><span class="val g">10 d</span></td><td><span class="val g">12 d</span></td><td><span class="val g">10 d</span></td><td><span class="val g">13 d</span></td></tr>
+      <tr><td>Días de pago (DPO)</td><td><span class="val g">95 d</span></td><td><span class="val g">106 d</span></td><td><span class="val g">104 d</span></td><td><span class="val g">102 d</span></td></tr>
+      <tr><td>Rotación de activos totales</td><td><span class="val w">0.77x</span></td><td><span class="val g">0.82x</span></td><td><span class="val g">0.82x</span></td><td><span class="val w">0.68x</span></td></tr>
+      <tr><td>Rotación de activo fijo</td><td><span class="val g">10.6x</span></td><td><span class="val g">11.6x</span></td><td><span class="val g">15.1x</span></td><td><span class="val g">12.5x</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Rentabilidad</td></tr>
+      <tr><td>Margen bruto</td><td><span class="val g">49.0%</span></td><td><span class="val g">49.8%</span></td><td><span class="val w">46.1%</span></td><td><span class="val w">44.5%</span></td></tr>
+      <tr><td>Margen EBITDA</td><td><span class="val w">13.7%</span></td><td><span class="val g">16.2%</span></td><td><span class="val g">15.6%</span></td><td><span class="val w">13.9%</span></td></tr>
+      <tr><td>Margen operativo (EBIT)</td><td><span class="val w">9.8%</span></td><td><span class="val g">12.6%</span></td><td><span class="val g">12.7%</span></td><td><span class="val w">11.1%</span></td></tr>
+      <tr><td>Margen neto</td><td><span class="val r">4.6%</span></td><td><span class="val w">6.8%</span></td><td><span class="val g">9.2%</span></td><td><span class="val w">6.9%</span></td></tr>
+      <tr><td>ROA</td><td><span class="val r">7.5%</span></td><td><span class="val g">10.3%</span></td><td><span class="val g">10.4%</span></td><td><span class="val w">7.5%</span></td></tr>
+      <tr><td>ROE</td><td><span class="val w">26.4%</span></td><td><span class="val g">32.1%</span></td><td><span class="val g">43.9%</span></td><td><span class="val g">29.6%</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Negocio Financiero</td></tr>
+      <tr><td>Cartera total de créditos</td><td><span class="val bl">$4.68B</span></td><td><span class="val bl">$6.33B</span></td><td><span class="val bl">$10.18B</span></td><td><span class="val bl">$16.41B</span></td></tr>
+      <tr><td>Provisión / Cartera (NPL proxy)</td><td><span class="val r">22.9%</span></td><td><span class="val g">16.6%</span></td><td><span class="val w">18.2%</span></td><td><span class="val w">18.8%</span></td></tr>
+      <tr><td>Provisión / Ingresos</td><td><span class="val r">10.2%</span></td><td><span class="val g">7.3%</span></td><td><span class="val w">8.9%</span></td><td><span class="val r">10.7%</span></td></tr>
+      <tr><td>Deuda financiera / Cartera</td><td><span class="val r">1.02x</span></td><td><span class="val g">0.71x</span></td><td><span class="val g">0.56x</span></td><td><span class="val g">0.56x</span></td></tr>
+      <tr><td>Fondos pagaderos a clientes</td><td><span class="val bl">$3.45B</span></td><td><span class="val bl">$4.48B</span></td><td><span class="val bl">$6.95B</span></td><td><span class="val bl">$13.03B</span></td></tr>
+      <tr class="cat-row"><td colspan="5">Cash Flow</td></tr>
+      <tr><td>FCO</td><td><span class="val g">$2.94B</span></td><td><span class="val g">$5.14B</span></td><td><span class="val g">$7.92B</span></td><td><span class="val g">$12.12B</span></td></tr>
+      <tr><td>FCF (FCO − Capex)</td><td><span class="val g">$2.49B</span></td><td><span class="val g">$4.63B</span></td><td><span class="val g">$7.06B</span></td><td><span class="val g">$10.77B</span></td></tr>
+      <tr><td>Capex</td><td><span class="val n">$454M</span></td><td><span class="val n">$509M</span></td><td><span class="val n">$860M</span></td><td><span class="val n">$1.34B</span></td></tr>
+      <tr class="cat-row"><td colspan="5">DuPont</td></tr>
+      <tr><td>① Margen neto</td><td><span class="val r">4.6%</span></td><td><span class="val w">6.8%</span></td><td><span class="val g">9.2%</span></td><td><span class="val w">6.9%</span></td></tr>
+      <tr><td>② Rotación de activos</td><td><span class="val w">0.77x</span></td><td><span class="val g">0.82x</span></td><td><span class="val g">0.82x</span></td><td><span class="val w">0.68x</span></td></tr>
+      <tr><td>③ Multiplicador equity</td><td><span class="val r">7.52x</span></td><td><span class="val w">5.75x</span></td><td><span class="val w">5.79x</span></td><td><span class="val w">6.32x</span></td></tr>
+      <tr><td>= ROE DuPont</td><td><span class="val w">26.4%</span></td><td><span class="val g">32.1%</span></td><td><span class="val g">43.9%</span></td><td><span class="val g">29.6%</span></td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+</div><!-- /wrap -->
+<div class="footer">MercadoLibre, Inc. (NASDAQ: MELI) · Dashboard Financiero Integral FY 2022–2025 · Fuente: SEC filings &amp; EX-99.1 Shareholder Letters · USD millones · v2.0 · Versión para análisis en clase</div>
+
+<script>
+const YRS=['2022','2023','2024','2025'];
+const Cs={G:'#059669',B:'#2563eb',A:'#d97706',R:'#dc2626',P:'#7c3aed',T:'#0891b2',gr:'rgba(0,0,0,0.04)',tk:'#9ca3af'};
+const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1f2937',titleColor:'#f9fafb',bodyColor:'#d1d5db',borderColor:'#374151',borderWidth:1,padding:8}},scales:{x:{grid:{color:Cs.gr},ticks:{color:Cs.tk,font:{size:10}}},y:{grid:{color:Cs.gr},ticks:{color:Cs.tk,font:{size:10}}}}};
+
+function mkLine(id,datasets,yfmt){const c=document.getElementById(id);if(!c)return;const o=JSON.parse(JSON.stringify(base));if(yfmt)o.scales.y.ticks.callback=yfmt;new Chart(c,{type:'line',data:{labels:YRS,datasets},options:o})}
+function mkBar(id,datasets,yfmt,stacked){const c=document.getElementById(id);if(!c)return;const o=JSON.parse(JSON.stringify(base));if(yfmt)o.scales.y.ticks.callback=yfmt;if(stacked){o.scales.x.stacked=true;o.scales.y.stacked=true}new Chart(c,{type:'bar',data:{labels:YRS,datasets},options:o})}
+function ln(l,d,c,dash){return{label:l,data:d,borderColor:c,backgroundColor:c+'15',tension:.35,fill:true,pointBackgroundColor:c,pointRadius:3,borderDash:dash||[]}}
+function br(l,d,c){return{label:l,data:d,backgroundColor:c,borderRadius:3,borderSkipped:false}}
+
+mkLine('cLiq',[ln('Corriente',[1.28,1.27,1.21,1.17],Cs.G),ln('Seca',[1.26,1.24,1.20,1.15],Cs.B,[4,2]),ln('Cash ratio',[.50,.53,.43,.22],Cs.A,[2,2])],v=>v.toFixed(2)+'x');
+mkBar('cCT',[br('Cap.Trabajo',[2391,2997,3539,4940],Cs.G)],v=>'$'+v.toLocaleString()+'M');
+
+// stacked bar for capital structure
+(function(){const c=document.getElementById('cCap');if(!c)return;const o=JSON.parse(JSON.stringify(base));o.scales.x.stacked=true;o.scales.y.stacked=true;o.scales.y.max=100;o.scales.y.ticks={callback:v=>v+'%',color:Cs.tk,font:{size:10}};new Chart(c,{type:'bar',data:{labels:YRS,datasets:[br('PN',[13.3,17.4,17.3,15.8],Cs.G),br('Deuda Fin.',[39.4,30.2,27.2,21.7],Cs.A),br('Otros',[47.3,52.4,55.5,62.5],'#d1d5db')]},options:o})})();
+
+mkLine('cDF',[ln('D.Fin/AT',[39.4,30.2,27.2,21.7],Cs.A)],v=>v+'%');
+mkLine('cCov',[ln('EBIT',[3.2,4.8,15.9,20.0],Cs.G),ln('EBITDA',[4.5,6.2,19.7,25.1],Cs.B,[4,2])],v=>v.toFixed(1)+'x');
+mkBar('cDE',[br('D.Fin/EBITDA',[7.1,4.0,2.8,2.3],Cs.A)],v=>v.toFixed(1)+'x');
+mkBar('cDays',[br('DSO corregido',[43,35,35,32],Cs.G),br('Días stock',[10,12,10,13],Cs.A),br('Días pago',[95,106,104,102],Cs.B)],v=>v+' d');
+mkLine('cRot',[ln('Inv (x)',[35,31,38,28],Cs.G),ln('AT (x×10)',[7.7,8.2,8.2,6.8],Cs.B,[4,2]),ln('Cap.Trab',[4.4,4.8,5.9,5.8],Cs.A,[2,2])],v=>v.toFixed(1)+'x');
+mkLine('cMargins',[ln('Bruto',[49.0,49.8,46.1,44.5],Cs.G),ln('EBITDA',[13.7,16.2,15.6,13.9],Cs.B,[4,2]),ln('Operativo',[9.8,12.6,12.7,11.1],Cs.A,[4,2]),ln('Neto',[4.6,6.8,9.2,6.9],Cs.R,[2,2])],v=>v+'%');
+mkLine('cROE',[ln('ROE',[26.4,32.1,43.9,29.6],Cs.G),ln('ROA',[7.5,10.3,10.4,7.5],Cs.B,[4,2])],v=>v+'%');
+mkBar('cPort',[br('Préstamos',[1736,2694,4895,9365],Cs.B),br('CC receivables',[2946,3632,5288,7046],Cs.T)],v=>'$'+v.toLocaleString()+'M',true);
+mkLine('cNPL',[ln('Prov/Cartera',[22.9,16.6,18.2,18.8],Cs.R)],v=>v.toFixed(1)+'%');
+mkBar('cCF',[br('CFO',[2940,5140,7918,12116],Cs.G),br('CFF',[916,-267,1959,2904],Cs.B),br('CFI',[-3871,-3450,-8287,-6179],Cs.R)],v=>'$'+v.toLocaleString()+'M');
+mkLine('cFCF',[ln('FCO',[2940,5140,7918,12116],Cs.G),ln('FCF',[2486,4631,7058,10773],Cs.B,[4,2])],v=>'$'+v.toLocaleString()+'M');
+
+// TAB NAV
+function st(id,btn){document.querySelectorAll('.tc').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById('tab-'+id).classList.add('on');btn.classList.add('on')}
+
+// DUPONT
+const dpD={2022:{m:'4.6%',at:'0.77x',eq:'7.52x',roe:'26.4%',mc:Cs.A,rc:Cs.A,ec:Cs.R,roc:Cs.A},2023:{m:'6.8%',at:'0.82x',eq:'5.75x',roe:'32.1%',mc:Cs.A,rc:Cs.G,ec:Cs.A,roc:Cs.G},2024:{m:'9.2%',at:'0.82x',eq:'5.79x',roe:'43.9%',mc:Cs.G,rc:Cs.G,ec:Cs.A,roc:Cs.G},2025:{m:'6.9%',at:'0.68x',eq:'6.32x',roe:'29.6%',mc:Cs.A,rc:Cs.A,ec:Cs.A,roc:Cs.G}};
+function sdp(yr,btn){document.querySelectorAll('.yb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');const d=dpD[yr];document.getElementById('dpbox').innerHTML=`<div style="font-size:11px;color:${Cs.tk};margin-bottom:12px;font-weight:600">Descomposición DuPont — FY ${yr} &nbsp;·&nbsp; ROE = Margen × Rotación × Apalancamiento</div><div class="dp-formula"><div class="dp-box"><div class="dp-l">① Margen neto</div><div class="dp-v" style="color:${d.mc}">${d.m}</div><div class="dp-d">Rentabilidad</div></div><div class="dp-op">×</div><div class="dp-box"><div class="dp-l">② Rotación activos</div><div class="dp-v" style="color:${d.rc}">${d.at}</div><div class="dp-d">Eficiencia</div></div><div class="dp-op">×</div><div class="dp-box"><div class="dp-l">③ Mult. de equity</div><div class="dp-v" style="color:${d.ec}">${d.eq}</div><div class="dp-d">Apalancamiento</div></div><div class="dp-op">=</div><div class="dp-box res"><div class="dp-l">ROE ${yr}</div><div class="dp-v" style="color:${d.roc};font-size:24px">${d.roe}</div><div class="dp-d">Resultado</div></div></div>`}
+sdp(2025,document.querySelector('.yb.on'));
+</script>
+</body>
+</html>
