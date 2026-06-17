@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Simulador · Finanzas · MAE UNaM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:#07090f;color:#dce8f5;font-family:'Outfit',sans-serif;line-height:1.5;min-height:100vh;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#07090f;}::-webkit-scrollbar-thumb{background:#1c3050;border-radius:3px;}
+.mono{font-family:'JetBrains Mono',monospace;}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,224,180,.25);}50%{box-shadow:0 0 0 8px rgba(0,224,180,0);}}
+.pglow{animation:glow 2s ease infinite;}
+input[type=range]{-webkit-appearance:none;width:100%;height:3px;border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;cursor:pointer;}
+.sr-g::-webkit-slider-thumb{background:#00e0b4;}
+.sr-y::-webkit-slider-thumb{background:#f4c430;}
+.sr-b::-webkit-slider-thumb{background:#4d9eff;}
+.sr-p::-webkit-slider-thumb{background:#7b5ef8;}
+.cft{width:100%;border-collapse:collapse;font-size:12px;}
+.cft th{padding:6px 10px;text-align:right;font-weight:500;color:#607a96;font-family:'JetBrains Mono',monospace;white-space:nowrap;border-bottom:1px solid #1c3050;}
+.cft th:first-child{text-align:left;min-width:210px;}
+.cft td{padding:5px 10px;text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowrap;border-bottom:1px solid #0d1320;}
+.cft td:first-child{text-align:left;font-family:'Outfit',sans-serif;font-size:12px;color:#607a96;}
+.cft tr.sub td{border-top:1px solid #1c3050;font-weight:600;}
+.cft tr.tot td{border-top:2px solid #1c3050;font-weight:700;color:#dce8f5;}
+.cft tr.sec td{background:#0d1320;color:#7b5ef8;font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:7px 10px;font-family:'Outfit',sans-serif;}
+.cft tr.ind td:first-child{padding-left:18px;font-size:11px;}
+.ninput{background:transparent;border:none;border-bottom:1px solid #1c3050;color:#f4c430;width:52px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;padding:1px 2px;}
+.tag{display:inline-block;padding:1px 5px;background:rgba(96,122,150,.15);border:1px solid #1c3050;border-radius:3px;font-size:9px;color:#607a96;margin-left:4px;}
+button{cursor:pointer;font-family:'Outfit',sans-serif;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ── Constants ──
+var G="#00e0b4",Y="#f4c430",R="#ff4d6d",B="#4d9eff",P="#7b5ef8";
+var TX="#dce8f5",MT="#607a96",BD="#1c3050",SF="#0d1320",CD="#111c2e";
+var ANOS=5, INV=1000000, RESID=400000, VBASE=2800000, GVPCT=0.10, KD=0.14, KE=0.22;
+var BASE={margenBruto:.28,laboral:180000,publicidad:60000,alquiler:72000,it:36000,otrosFijos:50000,finPropio:.40,diasCob:75,diasInv:60,diasProv:30,crec:[0,0,0,0,0]};
+
+function gfTotal(p){return p.laboral+p.publicidad+p.alquiler+p.it+p.otrosFijos;}
+function calcWACC(p){return (1-p.finPropio)*KD*0.65+p.finPropio*KE;}
+function calcCC(p){return p.diasCob+p.diasInv-p.diasProv;}
+
+function buildModel(p){
+  var wacc=calcWACC(p),gf=gfTotal(p),van=-INV,filas=[],capAnt=0,ventAnt=VBASE;
+  for(var t=0;t<ANOS;t++){
+    var ventas=ventAnt*(1+p.crec[t]),mb=ventas*p.margenBruto,gv=ventas*GVPCT;
+    var cm=mb-gv,ebitda=cm-gf,ct=(calcCC(p)/365)*ventas,dct=ct-capAnt;
+    capAnt=ct;
+    var esUlt=t===ANOS-1,recupCT=esUlt?ct:0,valTerm=esUlt?RESID:0;
+    var flujo=ebitda-dct+recupCT+valTerm,fd=1/Math.pow(1+wacc,t+1),vp=flujo*fd;
+    van+=vp;
+    filas.push({ventas:ventas,mb:mb,gv:gv,cm:cm,ebitda:ebitda,ct:ct,dct:dct,recupCT:recupCT,valTerm:valTerm,flujo:flujo,fd:fd,vp:vp,vanAcum:van,crec:p.crec[t]});
+    ventAnt=ventas;
+  }
+  return {van:van,filas:filas,wacc:wacc};
+}
+
+function calcTIR(p){
+  var gf=gfTotal(p);
+  function npv(r){
+    var v=-INV,capAnt=0,ventAnt=VBASE;
+    for(var t=0;t<ANOS;t++){
+      var ventas=ventAnt*(1+p.crec[t]),ebitda=ventas*p.margenBruto-ventas*GVPCT-gf;
+      var ct=(calcCC(p)/365)*ventas,flujo=ebitda-(ct-capAnt)+(t===ANOS-1?ct+RESID:0);
+      v+=flujo/Math.pow(1+r,t+1);
+      capAnt=ct;ventAnt=ventas;
+    }
+    return v;
+  }
+  var lo=-0.5,hi=2.0;
+  if(npv(lo)*npv(hi)>0)return npv(0)>0?2.0:-0.99;
+  for(var i=0;i<200;i++){var mid=(lo+hi)/2,v=npv(mid);if(Math.abs(v)<1)return mid;v>0?(lo=mid):(hi=mid);}
+  return (lo+hi)/2;
+}
+
+var fm=function(n){if(n==null||isNaN(n))return"-";var s=new Intl.NumberFormat("es-AR",{style:"currency",currency:"USD",maximumFractionDigits:0}).format(Math.abs(n));return n<0?"("+s+")":s;};
+var fp=function(n){return(n*100).toFixed(1)+"%";};
+
+// ── Excel Export ──
+function downloadExcel(params,filas,van,wacc,tir){
+  var wb=XLSX.utils.book_new();
+  var gf=gfTotal(params),cc=calcCC(params),wp=(wacc*100).toFixed(2);
+  var NAVY="FF111c2e",DARK="FF0d1320",HDR="FF1e3a5f",TOT="FF0d2d1f",NEG="FF3d0d1a";
+  var W="FFdce8f5",GRN="FF00e0b4",GLD="FFf4c430",RED="FFff4d6d",BLU="FF4d9eff",GRY="FF607a96",PRP="FF7b5ef8";
+  var BLK="FF07090f",TTL="FF07090f";
+  function mk(fgColor,bgColor,bold){
+    return {font:{color:{rgb:fgColor||W},bold:!!bold,name:"Calibri",sz:10},
+            fill:{fgColor:{rgb:bgColor||NAVY},patternType:"solid"},
+            alignment:{vertical:"center"},
+            border:{bottom:{style:"thin",color:{rgb:"FF1c3050"}},right:{style:"thin",color:{rgb:"FF1c3050"}}}};
+  }
+  var sTitle=function(){return mk(GRN,BLK,true);};
+  var sSub  =function(){return mk(GRY,BLK,false);};
+  var sHdr  =function(){return mk(W,HDR,true);};
+  var sSec  =function(){return mk(PRP,DARK,true);};
+  var sNorm =function(){return mk(W,NAVY,false);};
+  var sGray =function(){return mk(GRY,NAVY,false);};
+  var sGrn  =function(){return mk(GRN,NAVY,true);};
+  var sGld  =function(){return mk(GLD,NAVY,true);};
+  var sRed  =function(){return mk(RED,NAVY,false);};
+  var sBlu  =function(){return mk(BLU,NAVY,false);};
+  var sTotG =function(){return mk(GRN,TOT,true);};
+  var sTotR =function(){return mk(RED,NEG,true);};
+  var sVan  =function(v){return v>=0?sTotG():sTotR();};
+  var sEb   =function(v){return v>=0?sTotG():sTotR();};
+
+  function t(v,st){return {v:v,t:"s",s:st||sNorm()};}
+  function n(v,st){return {v:v,t:"n",z:'"USD" #,##0',s:st||sNorm()};}
+  function pc(v,st){return {v:v,t:"n",z:"0.0%",s:st||sNorm()};}
+  function di(v,st){return {v:v,t:"n",z:"0",s:st||sNorm()};}
+  function fx(f,st){return {f:f,t:"n",z:'"USD" #,##0',s:st||sNorm()};}
+  function fp2(f,st){return {f:f,t:"n",z:"0.0%",s:st||sNorm()};}
+  function fd4(f,st){return {f:f,t:"n",z:"0.0000",s:st||sNorm()};}
+
+  var COLS=["B","C","D","E","F"];
+  var ws={};
+
+  function sec(r,lbl){ws["A"+r]=t(lbl,sSec());COLS.forEach(function(c){ws[c+r]=t("",sSec());});}
+  function blank(c,r,st){ws[c+r]=t("",st||sNorm());}
+
+  // Titles
+  ws["A1"]=t("CASH FLOW PROYECTADO — PLANTA INDUSTRIAL NEXGEN S.A.",sTitle());
+  COLS.forEach(function(c){ws[c+"1"]=t("",sTitle());});
+  ws["A2"]=t("MAE UNaM  |  Dirección Estratégica de Finanzas  |  "+new Date().toLocaleDateString("es-AR"),sSub());
+  COLS.forEach(function(c){ws[c+"2"]=t("",sSub());});
+  ws["A3"]=t("",sNorm()); COLS.forEach(function(c){ws[c+"3"]=t("",sNorm());});
+
+  // Headers
+  ws["A4"]=t("Concepto",sHdr());
+  ["Año 1","Año 2","Año 3","Año 4","Año 5"].forEach(function(h,i){ws[COLS[i]+"4"]=t(h,sHdr());});
+
+  // ESTADO DE RESULTADOS
+  sec(5,"ESTADO DE RESULTADOS");
+  ws["A6"]=t("Ventas base año 0 (fijo)",sGray()); ws["B6"]=n(VBASE,sBlu()); ["C","D","E","F"].forEach(function(c){ws[c+"6"]=t("—",sGray());});
+  ws["A7"]=t("  Crecimiento de ventas (%)",sGray());
+  filas.forEach(function(f,i){ws[COLS[i]+"7"]=pc(f.crec,sNorm());});
+  ws["A8"]=t("Ventas (USD)",sGrn());
+  ws["B8"]=fx("B6*(1+B7)",sGrn()); ws["C8"]=fx("B8*(1+C7)",sGrn()); ws["D8"]=fx("C8*(1+D7)",sGrn()); ws["E8"]=fx("D8*(1+E7)",sGrn()); ws["F8"]=fx("E8*(1+F7)",sGrn());
+  ws["A9"]=t("  Margen Bruto (%)",sGray());
+  COLS.forEach(function(c){ws[c+"9"]=pc(params.margenBruto,sGld());});
+  ws["A10"]=t("Margen Bruto (USD)",sGld());
+  COLS.forEach(function(c){ws[c+"10"]=fx(c+"8*"+c+"9",sGld());});
+  ws["A11"]=t("  Gastos Variables (10% ventas — fijo)",sGray());
+  COLS.forEach(function(c){ws[c+"11"]=pc(GVPCT,sGray());});
+  ws["A12"]=t("Gastos Variables (USD)",sRed());
+  COLS.forEach(function(c){ws[c+"12"]=fx("-"+c+"8*"+c+"11",sRed());});
+  ws["A13"]=t("CONTRIBUCION MARGINAL (USD)",sGld());
+  COLS.forEach(function(c){ws[c+"13"]=fx(c+"10+"+c+"12",sGld());});
+
+  // COSTOS FIJOS
+  sec(14,"COSTOS FIJOS");
+  var cfItems=[["  Costo Laboral",-params.laboral],["  Publicidad",-params.publicidad],["  Alquiler",-params.alquiler],["  IT y Tecnologia",-params.it],["  Otros Fijos",-params.otrosFijos]];
+  cfItems.forEach(function(item,idx){var r=15+idx; ws["A"+r]=t(item[0]+" (USD)",sGray()); COLS.forEach(function(c){ws[c+r]=n(item[1],sRed());});});
+  ws["A20"]=t("Total Costos Fijos (USD)",sRed());
+  COLS.forEach(function(c){ws[c+"20"]=fx("SUM("+c+"15:"+c+"19)",sRed());});
+  ws["A21"]=t("EBITDA (USD)",sEb(filas[0]?filas[0].ebitda:0));
+  filas.forEach(function(f,i){ws[COLS[i]+"21"]=fx(COLS[i]+"13+"+COLS[i]+"20",sEb(f.ebitda));});
+
+  // CAPITAL DE TRABAJO
+  sec(22,"CAPITAL DE TRABAJO");
+  ws["A23"]=t("  Dias Cobranza DSO",sGray()); ws["A24"]=t("  Dias Inventario DIO",sGray()); ws["A25"]=t("  Dias Proveedores DPO",sGray());
+  COLS.forEach(function(c){ws[c+"23"]=di(params.diasCob,sBlu()); ws[c+"24"]=di(params.diasInv,sBlu()); ws[c+"25"]=di(params.diasProv,sBlu());});
+  ws["A26"]=t("  Ciclo de Conversion de Efectivo (dias)",sGray());
+  COLS.forEach(function(c){ws[c+"26"]={f:c+"23+"+c+"24-"+c+"25",t:"n",z:"0",s:sBlu()};});
+  ws["A27"]=t("Capital de Trabajo Requerido (USD)",sBlu());
+  COLS.forEach(function(c){ws[c+"27"]=fx("("+c+"26/365)*"+c+"8",sBlu());});
+  ws["A28"]=t("Variacion Capital de Trabajo dCT (USD)",sNorm());
+  ws["B28"]=fx("B27",sNorm()); ws["C28"]=fx("C27-B27",sNorm()); ws["D28"]=fx("D27-C27",sNorm()); ws["E28"]=fx("E27-D27",sNorm()); ws["F28"]=fx("F27-E27",sNorm());
+
+  // FLUJO LIBRE
+  sec(29,"FLUJO DE FONDOS LIBRE");
+  ws["A30"]=t("CAPEX  Inversion Inicial (ano 0)",sRed()); ws["B30"]=n(-INV,sRed()); ["C","D","E","F"].forEach(function(c){ws[c+"30"]=n(0,sGray());});
+  ws["A31"]=t("Valor Terminal  Venta del proyecto (ano 5)",sGld()); ["B","C","D","E"].forEach(function(c){ws[c+"31"]=n(0,sGray());}); ws["F31"]=n(RESID,sGld());
+  ws["A32"]=t("Recuperacion Capital de Trabajo (ano 5)",sGrn()); ["B","C","D","E"].forEach(function(c){ws[c+"32"]=n(0,sGray());}); ws["F32"]=fx("F27",sGrn());
+  ws["A33"]=t("FLUJO LIBRE DEL PROYECTO (USD)",sTotG());
+  filas.forEach(function(f,i){ws[COLS[i]+"33"]=fx(COLS[i]+"21-"+COLS[i]+"28+"+COLS[i]+"31+"+COLS[i]+"32",f.flujo>=0?sTotG():sTotR());});
+  ws["A34"]=t("Factor de Descuento (WACC="+wp+"%)",sGray());
+  COLS.forEach(function(c,i){ws[c+"34"]=fd4("1/POWER(1+"+wacc+","+(i+1)+")",sGray());});
+  ws["A35"]=t("Valor Presente del Flujo (USD)",sNorm());
+  COLS.forEach(function(c){ws[c+"35"]=fx(c+"33*"+c+"34",sNorm());});
+  ws["A36"]=t("VAN ACUMULADO (USD)",sVan(van));
+  ws["B36"]=fx("-"+INV+"+B35",sVan(van)); ws["C36"]=fx("B36+C35",sVan(van)); ws["D36"]=fx("C36+D35",sVan(van)); ws["E36"]=fx("D36+E35",sVan(van)); ws["F36"]=fx("E36+F35",sVan(van));
+
+  // INDICADORES
+  ws["A37"]=t("",sNorm()); COLS.forEach(function(c){ws[c+"37"]=t("",sNorm());});
+  sec(38,"INDICADORES FINALES");
+  var indData=[ ["VAN del Proyecto (USD)",{f:"F36",t:"n",z:'"USD" #,##0'},sVan(van)], ["WACC",pc(wacc),sBlu()], ["TIR estimada",pc(tir),tir>wacc?sGrn():sRed()], ["Kd fijo",pc(KD),sGray()], ["Ke fijo",pc(KE),sGray()], ["Fin. Propio",pc(params.finPropio),sNorm()] ];
+  indData.forEach(function(row,idx){var r=39+idx; ws["A"+r]=t(row[0],sNorm()); ws["B"+r]={v:row[1].v,f:row[1].f,t:"n",z:row[1].z||"0.0%",s:row[2]}; if(!ws["B"+r].v&&ws["B"+r].v!==0)delete ws["B"+r].v; COLS.slice(1).forEach(function(c){ws[c+r]=t("",sNorm());});});
+
+  ws["!ref"]="A1:F44";
+  ws["!cols"]=[{wch:48},{wch:17},{wch:17},{wch:17},{wch:17},{wch:17}];
+  ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:5}},{s:{r:1,c:0},e:{r:1,c:5}},{s:{r:4,c:0},e:{r:4,c:5}},{s:{r:13,c:0},e:{r:13,c:5}},{s:{r:21,c:0},e:{r:21,c:5}},{s:{r:28,c:0},e:{r:28,c:5}},{s:{r:37,c:0},e:{r:37,c:5}}];
+
+  XLSX.utils.book_append_sheet(wb,ws,"Cash Flow Proyectado");
+
+  // Params sheet
+  var pr=[["PARAMETROS DEL MODELO  NEXGEN S.A.",""],["Fecha",new Date().toLocaleDateString("es-AR")],["",""],["DATOS FIJOS",""],["Inversion inicial CAPEX",-INV],["Valor terminal",RESID],["Ventas base",VBASE],["Gastos variables",GVPCT],["Kd",KD],["Ke",KE],["Horizonte anos",ANOS],["",""],["DRIVERS AJUSTADOS",""],["Margen Bruto",params.margenBruto],["Costo Laboral",params.laboral],["Publicidad",params.publicidad],["Alquiler",params.alquiler],["IT",params.it],["Otros Fijos",params.otrosFijos],["Total CF",gf],["",""],["DSO",params.diasCob],["DIO",params.diasInv],["DPO",params.diasProv],["Ciclo dias",cc],["",""],["Fin. Propio",params.finPropio],["WACC",wacc],["",""],["Crec Ano 1",params.crec[0]],["Crec Ano 2",params.crec[1]],["Crec Ano 3",params.crec[2]],["Crec Ano 4",params.crec[3]],["Crec Ano 5",params.crec[4]]];
+  var wsP=XLSX.utils.aoa_to_sheet(pr);
+  wsP["!cols"]=[{wch:36},{wch:22}];
+  var pR=XLSX.utils.decode_range(wsP["!ref"]);
+  for(var R2=pR.s.r;R2<=pR.e.r;R2++){var a=XLSX.utils.encode_cell({r:R2,c:1});if(!wsP[a]||typeof wsP[a].v!=="number")continue;var v2=wsP[a].v;if(v2!==0&&Math.abs(v2)<1)wsP[a].z="0.0%";else if(Math.abs(v2)>=1000)wsP[a].z='"USD" #,##0';else wsP[a].z="0";}
+  XLSX.utils.book_append_sheet(wb,wsP,"Parametros");
+  XLSX.writeFile(wb,"cashflow-nexgen-"+new Date().toISOString().slice(0,10)+".xlsx");
+}
+
+// ── React app (no JSX, no Babel) ──
+var h = React.createElement;
+
+var GRUPOS = [
+  {id:"r",label:"Rentabilidad Operativa",color:G,sr:"sr-g",items:[
+    {key:"margenBruto",label:"Margen Bruto",min:.15,max:.60,step:.005,fmt:fp,hint:"Renegociación de proveedores, mix de productos, eficiencias productivas..."}
+  ]},
+  {id:"c",label:"Costos Fijos",color:Y,sr:"sr-y",items:[
+    {key:"laboral",   label:"Costo Laboral",  min:50000, max:500000,step:5000, fmt:fm,hint:"Estructura, productividad, tercerización..."},
+    {key:"publicidad",label:"Publicidad",      min:0,     max:200000,step:5000, fmt:fm,hint:"Canales digitales vs. tradicionales, ROI..."},
+    {key:"alquiler",  label:"Alquiler",        min:20000, max:200000,step:4000, fmt:fm,hint:"Renegociación, espacio compartido..."},
+    {key:"it",        label:"IT / Tecnología", min:10000, max:150000,step:2000, fmt:fm,hint:"Cloud, licencias, outsourcing..."},
+    {key:"otrosFijos",label:"Otros Fijos",     min:0,     max:200000,step:5000, fmt:fm,hint:"Seguros, servicios, mantenimiento..."}
+  ]},
+  {id:"k",label:"Ciclo Operativo",color:B,sr:"sr-b",items:[
+    {key:"diasCob", label:"Días Cobranza (DSO)",   min:15,max:150,step:5,fmt:function(v){return v+" días";},hint:"Descuentos por pronto pago, factoring..."},
+    {key:"diasInv", label:"Días Inventario (DIO)",  min:10,max:120,step:5,fmt:function(v){return v+" días";},hint:"Just-in-time, gestión ABC..."},
+    {key:"diasProv",label:"Días Proveedores (DPO)", min:15,max:120,step:5,fmt:function(v){return v+" días";},hint:"Renegociación, mayor volumen..."}
+  ]},
+  {id:"f",label:"Financiamiento",color:P,sr:"sr-p",items:[
+    {key:"finPropio",label:"Equity %",min:.10,max:1.00,step:.05,fmt:fp,hint:"Aporte de socios, deuda bancaria, reinversión..."}
+  ]}
+];
+
+function App(){
+  var s = React.useState({margenBruto:.28,laboral:180000,publicidad:60000,alquiler:72000,it:36000,otrosFijos:50000,finPropio:.40,diasCob:75,diasInv:60,diasProv:30,crec:[0,0,0,0,0]});
+  var params=s[0], setParams=s[1];
+  var sg=React.useState(0); var grp=sg[0],setGrp=sg[1];
+
+  var model = React.useMemo(function(){return buildModel(params);},[params]);
+  var van=model.van, filas=model.filas, wacc=model.wacc;
+  var baseVan=React.useMemo(function(){return buildModel(BASE).van;},[]);
+  var tir=React.useMemo(function(){return calcTIR(params);},[params]);
+  var cc=React.useMemo(function(){return calcCC(params);},[params]);
+  var gf=React.useMemo(function(){return gfTotal(params);},[params]);
+  var vanPos=van>0;
+
+  var changedKeys=React.useMemo(function(){
+    var keys=Object.keys(BASE).filter(function(k){return k!=="crec"&&params[k]!==BASE[k];});
+    if(params.crec.some(function(v,i){return v!==BASE.crec[i];}))keys.push("crec");
+    return keys;
+  },[params]);
+
+  function setP(k,v){setParams(function(p){var n=Object.assign({},p);n[k]=v;return n;});}
+  function setC(i,v){setParams(function(p){var c=p.crec.slice();c[i]=v;return Object.assign({},p,{crec:c});});}
+  function reset(){setParams(Object.assign({},BASE,{crec:BASE.crec.slice()}));}
+
+  // ── Slider row renderer (inline, not sub-component) ──
+  function renderSlider(drv, g, params){
+    var val=params[drv.key];
+    if(val===undefined||val===null)val=BASE[drv.key];
+    var chg=val!==BASE[drv.key];
+    var pct=(val-drv.min)/(drv.max-drv.min)*100;
+    return h("div",{key:drv.key,style:{marginBottom:"1.3rem",paddingBottom:"1.1rem",borderBottom:"1px solid "+BD}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",marginBottom:5,alignItems:"baseline"}},
+        h("span",{style:{fontSize:13,color:chg?g.color:MT,fontWeight:chg?600:400}},drv.label+(chg?" ✦":"")),
+        h("div",null,
+          h("span",{className:"mono",style:{fontSize:13,color:chg?g.color:TX}},drv.fmt(val)),
+          chg?h("span",{className:"mono",style:{fontSize:10,color:MT,marginLeft:6}},"base: "+drv.fmt(BASE[drv.key])):null
+        )
+      ),
+      h("input",{type:"range",className:g.sr,min:drv.min,max:drv.max,step:drv.step,value:val,
+        style:{background:"linear-gradient(90deg,"+g.color+" "+pct+"%,"+BD+" "+pct+"%)"},
+        onChange:function(e){setP(drv.key,parseFloat(e.target.value));}}),
+      h("div",{style:{fontSize:10,color:MT,marginTop:3}},drv.hint)
+    );
+  }
+
+  // ── Cash flow table row helpers ──
+  function tr(cls,cells){return h("tr",{className:cls||""},cells);}
+  function tdL(txt,style){return h("td",{style:style||{}},txt);}
+  function tdR(txt,color){return h("td",{style:{color:color||TX}},txt);}
+  function secRow(label){return tr("sec",h("td",{colSpan:6},label));}
+
+  var crecInputs = filas.map(function(f,i){
+    return h("td",{key:i},
+      h("input",{className:"ninput",type:"number",min:-20,max:50,step:.5,
+        value:(params.crec[i]*100).toFixed(1),
+        onChange:function(e){setC(i,parseFloat(e.target.value)/100);}}),"%" 
+    );
+  });
+
+  return h("div",{style:{maxWidth:1140,margin:"0 auto",padding:"1.25rem 1rem"}},
+
+    // Top bar
+    h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}},
+      h("div",null,
+        h("div",{style:{fontSize:10,color:G,textTransform:"uppercase",letterSpacing:".1em"}},"MAE UNaM · Dirección Estratégica de Finanzas · Horizonte 5 años"),
+        h("div",{style:{fontWeight:700,fontSize:"1.1rem"}},"NEXGEN S.A. — Evaluación de Proyecto de Inversión")
+      ),
+      h("button",{onClick:reset,style:{background:"transparent",border:"1px solid "+BD,color:MT,padding:"6px 12px",borderRadius:7,fontSize:12}},"↺ Reset")
+    ),
+
+    // VAN Hero
+    h("div",{className:vanPos?"pglow":"",style:{background:vanPos?"rgba(0,224,180,.05)":"rgba(255,77,109,.05)",border:"2px solid "+(vanPos?G:R),borderRadius:13,padding:"1rem 1.4rem",marginBottom:"1rem",display:"flex",alignItems:"center",flexWrap:"wrap",gap:"1.5rem",transition:"all .4s"}},
+      h("div",null,
+        h("div",{style:{fontSize:10,color:MT,textTransform:"uppercase",letterSpacing:".1em",marginBottom:2}},"VAN Actual "+(vanPos?"✅":"❌")),
+        h("div",{className:"mono",style:{fontSize:"clamp(1.6rem,3.5vw,2.5rem)",fontWeight:700,color:vanPos?G:R}},fm(van))
+      ),
+      h("div",{style:{display:"flex",gap:"1.5rem",flexWrap:"wrap"}},
+        [{l:"WACC",v:fp(wacc),c:B},{l:"TIR",v:fp(tir),c:Y},{l:"Ciclo ef.",v:cc+" días",c:cc<60?G:Y},{l:"CF ajust.",v:changedKeys.length,c:P}].map(function(x){
+          return h("div",{key:x.l},
+            h("div",{style:{fontSize:10,color:MT,textTransform:"uppercase"}},x.l),
+            h("div",{className:"mono",style:{fontSize:".95rem",fontWeight:600,color:x.c}},x.v)
+          );
+        })
+      ),
+      !vanPos?h("div",{style:{marginLeft:"auto",fontSize:11,color:MT}},"Faltan: ",h("span",{className:"mono",style:{color:R}},fm(Math.abs(van)))):null
+    ),
+
+    // Main grid
+    h("div",{style:{display:"grid",gridTemplateColumns:"1fr 310px",gap:"1rem",alignItems:"start"}},
+
+      // LEFT
+      h("div",{style:{display:"flex",flexDirection:"column",gap:"1rem"}},
+
+        // CF Table
+        h("div",{style:{background:CD,border:"1px solid "+BD,borderRadius:13,padding:"1.1rem",overflowX:"auto"}},
+          h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:".9rem"}},
+            h("div",{style:{fontSize:11,color:P,textTransform:"uppercase",letterSpacing:".1em",fontWeight:600}},"Cash Flow Proyectado"),
+            h("button",{onClick:function(){downloadExcel(params,filas,van,wacc,tir);},
+              style:{padding:"5px 12px",background:"linear-gradient(135deg,"+G+",#009e7e)",border:"none",borderRadius:6,color:"#07090f",fontWeight:700,fontSize:11}},
+              "⬇ Excel")
+          ),
+          h("table",{className:"cft"},
+            h("thead",null,h("tr",null,h("th",{style:{textAlign:"left"}},"Concepto"),[1,2,3,4,5].map(function(i){return h("th",{key:i},"Año "+i);}))),
+            h("tbody",null,
+              secRow("Estado de Resultados"),
+              tr("",[ tdL(h("span",null,"Ventas base año 0 ",h("span",{className:"tag"},"fijo"))), h("td",{key:"b",style:{color:MT}},fm(VBASE)), [1,2,3,4].map(function(i){return h("td",{key:i,style:{color:MT}},"—");}) ]),
+              tr("ind",[ tdL("↳ Crecimiento ventas (%)") ].concat(crecInputs)),
+              tr("",[ tdL("Ventas (USD)") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:G}},fm(f.ventas));}))),
+              tr("ind",[ tdL("↳ Margen Bruto ("+fp(params.margenBruto)+")") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:Y}},fm(f.mb));}))),
+              tr("ind",[ tdL(h("span",null,"↳ Gastos Variables (10%) ",h("span",{className:"tag"},"fijo"))) ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:R}},"("+fm(f.gv)+")");}))),
+              tr("sub",[ h("td",{key:"l",style:{color:Y}},"Contribución Marginal") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:Y}},fm(f.cm));}))),
+
+              secRow("Costos Fijos — Total: "+fm(gf)),
+              ...[["laboral","Costo Laboral"],["publicidad","Publicidad"],["alquiler","Alquiler"],["it","IT / Tecnología"],["otrosFijos","Otros Fijos"]].map(function(item){
+                var k=item[0],lbl=item[1],chg=params[k]!==BASE[k];
+                return tr("ind",[tdL(h("span",{style:{color:chg?Y:MT}},"↳ "+lbl+(chg?" ✦":"")))].concat(filas.map(function(_,i){return h("td",{key:i,style:{color:chg?Y:MT}},"("+fm(params[k])+")");}))); 
+              }),
+              tr("sub",[ tdL("Total Costos Fijos") ].concat(filas.map(function(_,i){return h("td",{key:i,style:{color:R}},"("+fm(gf)+")");}))),
+              tr("tot",[ h("td",{key:"l"},"EBITDA") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.ebitda>=0?G:R,fontWeight:700}},fm(f.ebitda));}))),
+
+              secRow("Capital de Trabajo — Ciclo: "+cc+" días"),
+              tr("",[ tdL("Capital de Trabajo Requerido") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:MT}},fm(f.ct));}))),
+              tr("",[ tdL("Variación CT (ΔCT)") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.dct>0?R:G}},f.dct>0?"("+fm(f.dct)+")":fm(-f.dct));}))),
+
+              secRow("Flujo de Fondos Libre"),
+              tr("",[tdL(h("span",null,"CAPEX — Inversión Inicial ",h("span",{className:"tag"},"año 0: "+fm(-INV))))].concat(filas.map(function(_,i){return h("td",{key:i,style:{color:MT}},"—");}))),
+              tr("",[tdL(h("span",null,"Valor Terminal — Venta del proyecto ",h("span",{className:"tag"},"fijo")))].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.valTerm>0?Y:MT}},f.valTerm>0?fm(f.valTerm):"—");}))),
+              tr("",[tdL("Recuperación Capital de Trabajo")].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.recupCT>0?G:MT}},f.recupCT>0?fm(f.recupCT):"—");}))),
+              tr("tot",[tdL("Flujo Libre del Proyecto")].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.flujo>=0?G:R,fontWeight:700}},fm(f.flujo));}))),
+              tr("ind",[h("td",{key:"l",style:{color:MT}},"Factor de descuento (WACC "+fp(wacc)+")")].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:MT}},f.fd.toFixed(4));}))),
+              tr("",[ tdL("Valor Presente") ].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.vp>=0?TX:R}},fm(f.vp));}))),
+              tr("tot",[h("td",{key:"l"},"VAN Acumulado")].concat(filas.map(function(f,i){return h("td",{key:i,style:{color:f.vanAcum>=0?G:R,fontWeight:700}},fm(f.vanAcum));})))
+            )
+          ),
+          h("div",{style:{marginTop:".6rem",fontSize:11,color:MT}},
+            "CAPEX año 0: "+fm(-INV)+" · Valor terminal año 5: "+fm(RESID)+" · Kd: "+fp(KD)+" · Ke: "+fp(KE)+" · WACC: "+fp(wacc))
+        ),
+
+        // Driver tabs
+        h("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
+          GRUPOS.map(function(g,i){
+            return h("button",{key:i,onClick:function(){setGrp(i);},style:{padding:"5px 13px",borderRadius:20,border:"1px solid "+(grp===i?g.color:BD),background:grp===i?g.color+"18":"transparent",color:grp===i?g.color:MT,fontSize:12,fontWeight:500}},g.label);
+          })
+        ),
+
+        // Active group panel
+        h("div",{style:{background:CD,border:"1px solid "+BD,borderRadius:13,padding:"1.25rem"}},
+          h("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:"1rem"}},
+            h("div",{style:{width:3,height:16,borderRadius:2,background:GRUPOS[grp].color}}),
+            h("span",{style:{fontWeight:600,fontSize:".85rem",color:GRUPOS[grp].color}},GRUPOS[grp].label)
+          ),
+          GRUPOS[grp].items.map(function(drv){return renderSlider(drv,GRUPOS[grp],params);}),
+          GRUPOS[grp].id==="r"?h("div",null,
+            h("div",{style:{fontSize:12,color:MT,fontWeight:600,marginBottom:".75rem"}},"Crecimiento de ventas por año"),
+            h("div",{style:{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8}},
+              params.crec.map(function(v,i){
+                var chg=v!==BASE.crec[i], pct=(v+0.10)/0.45*100;
+                return h("div",{key:i,style:{textAlign:"center"}},
+                  h("div",{style:{fontSize:10,color:MT,marginBottom:3}},"Año "+(i+1)),
+                  h("div",{className:"mono",style:{fontSize:13,color:chg?Y:TX,marginBottom:4}},fp(v)),
+                  h("input",{type:"range",className:"sr-y",min:-.10,max:.35,step:.005,value:v,
+                    style:{background:"linear-gradient(90deg,"+Y+" "+pct+"%,"+BD+" "+pct+"%)"},
+                    onChange:function(e){setC(i,parseFloat(e.target.value));}})
+                );
+              })
+            )
+          ):null
+        )
+      ),
+
+      // RIGHT sidebar
+      h("div",{style:{display:"flex",flexDirection:"column",gap:".75rem",position:"sticky",top:"1rem"}},
+
+        // VAN comparativo
+        h("div",{style:{background:CD,border:"1px solid "+BD,borderRadius:12,padding:"1rem"}},
+          h("div",{style:{fontSize:10,color:MT,textTransform:"uppercase",letterSpacing:".08em",marginBottom:".7rem"}},"Comparativo VAN"),
+          [{l:"Original",v:baseVan},{l:"Actual",v:van}].map(function(row){
+            return h("div",{key:row.l,style:{marginBottom:".55rem"}},
+              h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3}},
+                h("span",{style:{color:MT}},row.l),
+                h("span",{className:"mono",style:{color:row.v<0?R:G}},fm(row.v))
+              ),
+              h("div",{style:{height:3,background:BD,borderRadius:2,overflow:"hidden"}},
+                h("div",{style:{height:"100%",width:Math.min(100,Math.abs(((row.v-baseVan)/Math.abs(baseVan))*100)+5)+"%",background:row.v<0?R:G,borderRadius:2}})
+              )
+            );
+          }),
+          van>baseVan?h("div",{style:{fontSize:11,color:G,marginTop:5}},"Mejora: +"+fm(van-baseVan)):null
+        ),
+
+        // Datos fijos
+        h("div",{style:{background:CD,border:"1px solid "+BD,borderRadius:12,padding:"1rem"}},
+          h("div",{style:{fontSize:10,color:MT,textTransform:"uppercase",letterSpacing:".08em",marginBottom:".7rem"}},"Datos fijos del caso"),
+          [["Ventas base (año 0)",fm(VBASE)],["Inversión (CAPEX)",fm(INV)],["Valor terminal",fm(RESID)],["Gastos variables",fp(GVPCT)+" ventas"],["Kd (deuda)",fp(KD)],["Ke (equity)",fp(KE)]].map(function(x){
+            return h("div",{key:x[0],style:{display:"flex",justifyContent:"space-between",marginBottom:7,alignItems:"baseline"}},
+              h("span",{style:{fontSize:11,color:MT}},x[0]),
+              h("span",{className:"mono",style:{fontSize:11,color:TX}},x[1])
+            );
+          })
+        ),
+
+        // Drivers tocados
+        h("div",{style:{background:CD,border:"1px solid "+BD,borderRadius:12,padding:"1rem"}},
+          h("div",{style:{fontSize:10,color:MT,textTransform:"uppercase",letterSpacing:".08em",marginBottom:".7rem"}},"Drivers ajustados ("+changedKeys.length+")"),
+          changedKeys.length===0
+            ? h("p",{style:{fontSize:12,color:MT}},"Ninguno aún.")
+            : changedKeys.map(function(k){
+                var drv=GRUPOS.flatMap(function(g){return g.items;}).find(function(d){return d.key===k;});
+                return h("div",{key:k,style:{fontSize:11,color:G,marginBottom:5,display:"flex",alignItems:"center",gap:6}},
+                  h("span",null,"✦"),
+                  h("span",null,k==="crec"?"Crecimiento ventas":drv?drv.label:k)
+                );
+              })
+        )
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+</script>
+</body>
+</html>
