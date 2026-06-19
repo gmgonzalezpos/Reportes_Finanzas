@@ -208,7 +208,7 @@ function downloadExcel(params,filas,van,wacc,tir){
   var pR=XLSX.utils.decode_range(wsP["!ref"]);
   for(var R2=pR.s.r;R2<=pR.e.r;R2++){var a=XLSX.utils.encode_cell({r:R2,c:1});if(!wsP[a]||typeof wsP[a].v!=="number")continue;var v2=wsP[a].v;if(v2!==0&&Math.abs(v2)<1)wsP[a].z="0.0%";else if(Math.abs(v2)>=1000)wsP[a].z='"USD" #,##0';else wsP[a].z="0";}
   XLSX.utils.book_append_sheet(wb,wsP,"Parametros");
-  XLSX.writeFile(wb,"cashflow-nexgen-"+new Date().toISOString().slice(0,10)+".xlsx");
+  XLSX.writeFile(wb,"cashflow-bioderma-"+new Date().toISOString().slice(0,10)+".xlsx");
 }
 
 // ── React app (no JSX, no Babel) ──
@@ -299,7 +299,7 @@ function App(){
     h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"1rem",flexWrap:"wrap",gap:8}},
       h("div",null,
         h("div",{style:{fontSize:10,color:G,textTransform:"uppercase",letterSpacing:".1em"}},"MAE UNaM · Dirección Estratégica de Finanzas · Horizonte 5 años"),
-        h("div",{style:{fontWeight:700,fontSize:"1.1rem"}},"NEXGEN S.A. — Evaluación de Proyecto de Inversión")
+        h("div",{style:{fontWeight:700,fontSize:"1.1rem"}},"BIODERMA AUSTRAL S.A. — Evaluación de Proyecto de Inversión")
       ),
       h("button",{onClick:reset,style:{background:"transparent",border:"1px solid "+BD,color:MT,padding:"6px 12px",borderRadius:7,fontSize:12}},"↺ Reset")
     ),
