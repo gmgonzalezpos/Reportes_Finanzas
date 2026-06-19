@@ -127,7 +127,7 @@ function downloadExcel(params,filas,van,wacc,tir){
   function blank(c,r,st){ws[c+r]=t("",st||sNorm());}
 
   // Titles
-  ws["A1"]=t("CASH FLOW PROYECTADO — PLANTA INDUSTRIAL NEXGEN S.A.",sTitle());
+  ws["A1"]=t("CASH FLOW PROYECTADO — BIODERMA AUSTRAL S.A.",sTitle());
   COLS.forEach(function(c){ws[c+"1"]=t("",sTitle());});
   ws["A2"]=t("MAE UNaM  |  Dirección Estratégica de Finanzas  |  "+new Date().toLocaleDateString("es-AR"),sSub());
   COLS.forEach(function(c){ws[c+"2"]=t("",sSub());});
